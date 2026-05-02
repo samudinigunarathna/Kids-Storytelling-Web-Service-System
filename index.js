@@ -1,7 +1,3 @@
-import express from "express";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
-import bodyParser from "body-parser";
 //Import necessary modules
 import express from "express"; //Import Express framework
 import dotenv from "dotenv"; //Import dotenv for loading environment variables
