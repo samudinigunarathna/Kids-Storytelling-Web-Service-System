@@ -46,10 +46,10 @@ export const update = async(req, res)=>{
     try{
         //Extract user id from request parameters
         const id = req.params.id;
-        //Check if the uder with the give id exists
+        //Check if the user with the give id exists
         const userExist = await user.findOne({_id:id});
         if(!userExist){
-            return res.status(404).json({message: "USer not exists"})
+            return res.status(404).json({message: "User not exists"})
         }
         //Update the user data and return the updated user
         const updateUser = await user.findByIdAndUpdate(id, req.body, {new:true});
