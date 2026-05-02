@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
+//Define the schema
 const userSchema = new mongoose.Schema({
+    //Define the properties with type and required constraints
     name:{
         type: String,
         required: true,
@@ -22,4 +24,5 @@ const userSchema = new mongoose.Schema({
     }
 });
 
+//Create and export the Mongoose model
 export default mongoose.model("users", userSchema);
