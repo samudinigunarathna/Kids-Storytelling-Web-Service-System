@@ -2,14 +2,28 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import bodyParser from "body-parser";
+//Import necessary modules
+import express from "express"; //Import Express framework
+import dotenv from "dotenv"; //Import dotenv for loading environment variables
+import mongoose from "mongoose"; //Import mongoose for MongoDB interactions
+import bodyParser from "body-parser"; //Import Body-Parser for Parsing request
 
+//Initialize express app
 const app = express();
 
+//Middleware for parsing .JSON request bodies
 app.use(bodyParser.json());
+
+//Load environment variables from .env file
 dotenv.config();
+
+//Define PORT for the server to listen on
 const PORT = process.env.PORT || 5000;
+
+//Define MongoDB Connection URL from environment variables
 const MONGOURL = process.env.MONGO_URL;
 
+//Connect to MONGODB database
 mongoose
 .connect(MONGOURL)
 .then(()=>{
