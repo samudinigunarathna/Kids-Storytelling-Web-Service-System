@@ -4,7 +4,7 @@ import story from "/models/storyModel.js";
 //For posting data into the database
 export const create = async(req, res)=>{
     try{
-        //Create new user instance with the request body
+        //Create new story instance with the request body
         const storyData = new story(req.body);
         const {title} = storyData;
         //Check if a story with the same name already exists
