@@ -4,6 +4,11 @@ import dotenv from "dotenv"; //Import dotenv for loading environment variables
 import mongoose from "mongoose"; //Import mongoose for MongoDB interactions
 import bodyParser from "body-parser"; //Import Body-Parser for Parsing request
 
+import userRoute from "./routes/userRoute.js";
+import storyRoute from "./routes/storyRoute.js";
+import favouriteRoute from "./routes/favouriteRoute.js";
+
+
 //Initialize express app
 const app = express();
 
@@ -21,13 +26,14 @@ const MONGOURL = process.env.MONGO_URL;
 
 //Connect to MONGODB database
 mongoose
-.connect(MONGOURL)
-.then(()=>{
+  .connect(MONGOURL)
+  .then(() => {
     console.log("Database connected successfully.");
-    app.listen(PORT, ()=>{
-        console.log(`Server is running on PORT ${PORT}`);
+    app.listen(PORT, () => {
+      console.log(`Server is running on PORT ${PORT}`);
     });
-})
-.catch((error) => {
-  console.log(error);
-});
+  });
+
+app.use("/api/user", userRoute);
+app.use("/api/story", storyRoute);
+app.use("/api/favourite", favouriteRoute);
