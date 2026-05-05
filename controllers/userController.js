@@ -1,5 +1,5 @@
 //Import the user model from UserModel.js
-import user from "/models/userModel.js";
+import user from "../models/userModel.js";
 
 //For posting data into the database
 export const create = async(req, res)=>{
@@ -8,7 +8,7 @@ export const create = async(req, res)=>{
         const userData = new user(req.body);
         const{email} = userData;
         //Check if a user with the same email already exists
-        const userExist = await user.findOne(email)
+        const userExist = await user.findOne({email})
         if(userExist){
             return res.status(400).json({message: "User already exists"})
         }
