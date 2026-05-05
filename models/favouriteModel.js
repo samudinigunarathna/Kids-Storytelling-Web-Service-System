@@ -17,4 +17,4 @@ const favouriteSchema = new mongoose.Schema({
 })
 
 //Create and export the Mongoose model
-export default mongoose.Schema("favourites", favouriteSchema);
+export default mongoose.model("favourites", favouriteSchema);

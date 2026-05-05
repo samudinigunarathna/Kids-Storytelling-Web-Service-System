@@ -24,4 +24,4 @@ const storySchema = new mongoose.Schema({
 });
 
 //Create and export the Mongoose model
-export default mongoose.Schema("stories", storySchema);
+export default mongoose.model("stories", storySchema);
