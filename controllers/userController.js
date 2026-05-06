@@ -4,20 +4,24 @@ import user from "../models/userModel.js";
 //For posting data into the database
 export const create = async (req, res) => {
     try {
+        console.log("Create user request received:", req.body);
         //Create new user instance with the request body
         const userData = new user(req.body);
         const { email } = userData;
         //Check if a user with the same email already exists
         const userExist = await user.findOne({ email })
         if (userExist) {
+            console.log("User already exists:", email);
             return res.status(400).json({ message: "User already exists" })
         }
         //Save the new user data into the database and send a success response
         const saveUser = await userData.save();
+        console.log("User saved successfully:", saveUser.email);
         res.status(200).json(saveUser);
     }
 
     catch (error) {
+        console.error("Error saving user:", error);
         //Handle any errors
         res.status(500).json({ error: "Internal server error." })
     }
@@ -79,7 +83,23 @@ export const deleteUser = async (req, res) => {
     }
 
     catch (error) {
-        //Handle any errors
         res.status(500).json({ message: "Internal server error." })
+    }
+}
+
+//For user login
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const userExist = await user.findOne({ email });
+        if (!userExist) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (userExist.password !== password) {
+            return res.status(401).json({ message: "Invalid password" });
+        }
+        res.status(200).json({ message: "Login successful", user: userExist });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error." });
     }
 }
