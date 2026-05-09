@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamTales | Magical Adventures for Kids</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+
+    <nav id="navbar">
+        <div class="container nav-content">
+            <a href="#" class="logo">
+                <i data-lucide="sparkles"></i>
+                DreamTales
+            </a>
+            <div class="nav-links" id="navLinks">
+                <div class="guest-links">
+                    <a href="#home">Home</a>
+                    <a href="#about">About</a>
+                    <a href="#stories">Stories</a>
+                    <button class="btn-login" onclick="openAuth('login')">Login</button>
+                </div>
+                <div class="user-links" style="display: none;">
+                    <span id="navWelcome" style="margin-right: 1rem; color: var(--primary); font-weight: 600;"></span>
+                    <a href="#dashboard" onclick="showSection('dashboard')">Dashboard</a>
+                    <a href="#stories">Library</a>
+                    <button class="btn-login" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="mainContent">
+        <div id="landingPage">
+        <!-- Hero Section -->
+        <section class="hero" id="home">
+            <div class="container hero-grid">
+                <div class="hero-text animate-up">
+                    <h1>Magical Stories for Tiny Explorers</h1>
+                    <p>Unleash your child's imagination with our collection of interactive, heartwarming, and educational tales designed for bedtime and beyond.</p>
+                    <div class="cta-group">
+                        <a href="#stories" class="btn-primary">Start Reading</a>
+                        <a href="#about" class="btn-login" style="border-radius: 50px;">Learn More</a>
+                    </div>
+                </div>
+                <div class="hero-image animate-up" style="animation-delay: 0.2s;">
+                    <img src="background_pic.png" alt="Magical DreamTales">
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about">
+            <div class="container">
+                <div class="section-title animate-up">
+                    <h2>Our Magical Mission</h2>
+                    <p>Creating safe spaces for creativity and growth.</p>
+                </div>
+                <div class="about-grid">
+                    <div class="about-card animate-up" style="animation-delay: 0.1s;">
+                        <i data-lucide="book-open" style="color: var(--primary); width: 40px; height: 40px; margin-bottom: 1rem;"></i>
+                        <h3>Endless Tales</h3>
+                        <p>From brave rabbits to cosmic kittens, our library is ever-growing with stories that teach and delight.</p>
+                    </div>
+                    <div class="about-text animate-up" style="animation-delay: 0.3s;">
+                        <h3>Why DreamTales?</h3>
+                        <p style="margin: 1.5rem 0; line-height: 1.8;">We believe every child is a natural storyteller. Our platform isn't just about reading; it's about connecting parents and children through the shared magic of narrative. Each story is carefully curated to ensure it's age-appropriate, positive, and deeply engaging.</p>
+                        <ul style="list-style: none; display: grid; gap: 1rem;">
+                            <li><i data-lucide="check-circle" style="color: var(--primary); vertical-align: middle; margin-right: 0.5rem;"></i> Safe & Kid-Friendly Content</li>
+                            <li><i data-lucide="check-circle" style="color: var(--primary); vertical-align: middle; margin-right: 0.5rem;"></i> Audio Support for Early Readers</li>
+                            <li><i data-lucide="check-circle" style="color: var(--primary); vertical-align: middle; margin-right: 0.5rem;"></i> Personalized Reading Experience</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stories Section -->
+            <section id="stories" class="stories">
+                <div class="container">
+                    <div class="section-title animate-up">
+                        <h2>Magical Story Library</h2>
+                        <p>Explore our collection of hand-picked tales for your little ones.</p>
+                    </div>
+                    <div class="stories-grid" id="storiesGrid">
+                        <div class="loading-state">
+                            <p>Loading magical stories...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Dashboard Section -->
+        <div id="dashboardPage" style="display: none;">
+            <section class="dashboard">
+                <div class="container">
+                    <div class="section-title animate-up">
+                        <h2>Welcome to your Adventure!</h2>
+                        <p>Track your magical progress and manage your profile.</p>
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <div class="profile-card animate-up">
+                            <div class="profile-header">
+                                <div class="avatar">
+                                    <i data-lucide="user"></i>
+                                </div>
+                                <h3 id="userName">User Name</h3>
+                                <p id="userEmail">user@example.com</p>
+                            </div>
+                            <div class="profile-details">
+                                <div class="detail-item">
+                                    <span class="label">Child's Name</span>
+                                    <span class="value" id="childName">Little One</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Member Since</span>
+                                    <span class="value">May 2024</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-card animate-up" style="animation-delay: 0.2s;">
+                            <h3>Quick Stats</h3>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="number" id="totalStoriesCount">0</span>
+                                    <span class="label">Total Stories</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="number" id="favouritesCount">0</span>
+                                    <span class="label">Favourites</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Auth Overlay -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-modal">
+            <button class="close-btn" onclick="closeAuth()">
+                <i data-lucide="x"></i>
+            </button>
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="loginTab" onclick="toggleAuth('login')">Login</div>
+                <div class="auth-tab" id="registerTab" onclick="toggleAuth('register')">Register</div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <input type="email" placeholder="Email Address" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn-primary">Welcome Back!</button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form" style="display: none;">
+                <div class="form-group">
+                    <input type="text" placeholder="Your Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" placeholder="Email Address" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" placeholder="Password" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" placeholder="Child's Name" required>
+                </div>
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

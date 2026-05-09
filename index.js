@@ -3,7 +3,6 @@ import express from "express"; //Import Express framework
 import dotenv from "dotenv"; //Import dotenv for loading environment variables
 dotenv.config();
 import mongoose from "mongoose"; //Import mongoose for MongoDB interactions
-import bodyParser from "body-parser"; //Import Body-Parser for Parsing request
 
 import userRoute from "./routes/userRoute.js";
 import storyRoute from "./routes/storyRoute.js";
@@ -19,7 +18,7 @@ app.use((req, res, next) => {
 });
 
 //Middleware for parsing .JSON request bodies
-app.use(bodyParser.json());
+app.use(express.json());
 
 //Test route
 app.get("/ping", (req, res) => res.send("pong"));
@@ -28,11 +27,16 @@ app.get("/favicon.ico", (req, res) => res.status(204).end());
 //Serve static files from public directory
 app.use(express.static("public"));
 
-//CORS middleware
+// CORS middleware with OPTIONS handling
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
   next();
 });
 
