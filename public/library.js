@@ -1,0 +1,237 @@
+// ── Auth Guard ─────────────────────────────────────────────────────────────
+const savedUser = localStorage.getItem('user');
+if (!savedUser) {
+    window.location.href = 'index.html?redirect=library';
+}
+const user = JSON.parse(savedUser || '{}');
+
+// ── Navbar ──────────────────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+    const nav = document.getElementById('navbar');
+    nav.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+document.getElementById('navWelcome').textContent = `Hi, ${user.name}! 👋`;
+
+// Show Admin link if user is admin
+const adminLink = document.getElementById('adminLink');
+if (adminLink && user.role === 'admin') {
+    adminLink.style.display = 'inline';
+}
+
+function goToDashboard(e) {
+    e.preventDefault();
+    window.location.href = 'index.html#dashboard';
+}
+
+function handleHomeClick(e) {
+    e.preventDefault();
+    const user = localStorage.getItem('user');
+    if (user) {
+        window.location.href = 'index.html#dashboard';
+    } else {
+        window.location.href = 'index.html?openAuth=login';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('user');
+    window.location.href = 'index.html';
+}
+
+// ── Auth Modal (for toggleFavourite edge case) ───────────────────────────────
+const authOverlay = document.getElementById('authOverlay');
+const loginTab = document.getElementById('loginTab');
+const registerTab = document.getElementById('registerTab');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+
+function openAuth(mode) { authOverlay.classList.add('active'); toggleAuth(mode); }
+function closeAuth() { authOverlay.classList.remove('active'); }
+function toggleAuth(mode) {
+    const isLogin = mode === 'login';
+    loginTab.classList.toggle('active', isLogin);
+    registerTab.classList.toggle('active', !isLogin);
+    loginForm.style.display = isLogin ? 'flex' : 'none';
+    registerForm.style.display = isLogin ? 'none' : 'flex';
+}
+authOverlay.addEventListener('click', (e) => { if (e.target === authOverlay) closeAuth(); });
+
+// ── Story Data ───────────────────────────────────────────────────────────────
+let allStories = [];
+let activeCategory = 'All';
+let searchQuery = '';
+
+async function loadStories() {
+    const grid = document.getElementById('storiesGrid');
+    try {
+        const res = await fetch('/api/story/getAllStories');
+        if (res.ok) {
+            allStories = await res.json();
+            renderCategories();
+            applyFilters();
+        } else {
+            grid.innerHTML = '<div class="loading-state"><p>No stories found yet. Magical things are coming! ✨</p></div>';
+        }
+    } catch (err) {
+        console.error(err);
+        grid.innerHTML = '<div class="loading-state"><p>The library is undergoing some magic. Please check back later!</p></div>';
+    }
+}
+
+// ── Categories ───────────────────────────────────────────────────────────────
+function renderCategories() {
+    const cats = ['All', ...new Set(allStories.map(s => s.category).filter(Boolean))];
+    const container = document.getElementById('categoryFilters');
+    container.innerHTML = cats.map(cat => `
+        <button class="category-btn ${cat === 'All' ? 'active' : ''}"
+                onclick="filterByCategory('${cat}')">${cat === 'All' ? 'All Stories' : cat}</button>
+    `).join('');
+}
+
+function filterByCategory(cat) {
+    activeCategory = cat;
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        const label = cat === 'All' ? 'All Stories' : cat;
+        btn.classList.toggle('active', btn.textContent.trim() === label);
+    });
+    applyFilters();
+}
+
+// ── Search ───────────────────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', (e) => {
+    searchQuery = e.target.value;
+    applyFilters();
+});
+
+// ── Filter + Render ──────────────────────────────────────────────────────────
+function applyFilters() {
+    const q = searchQuery.toLowerCase().trim();
+    const filtered = allStories.filter(s => {
+        const matchCat = activeCategory === 'All' || s.category === activeCategory;
+        const matchSearch = !q
+            || (s.title && s.title.toLowerCase().includes(q))
+            || (s.author && s.author.toLowerCase().includes(q));
+        return matchCat && matchSearch;
+    });
+    renderStories(filtered);
+}
+
+function renderStories(stories) {
+    const grid = document.getElementById('storiesGrid');
+    const count = document.getElementById('storiesCount');
+
+    count.textContent = stories.length
+        ? `Showing ${stories.length} ${stories.length === 1 ? 'story' : 'stories'}`
+        : '';
+
+    if (!stories.length) {
+        grid.innerHTML = '<div class="loading-state"><p>No stories match your search. Try something else! 🔍</p></div>';
+        return;
+    }
+
+    grid.innerHTML = stories.map(story => `
+        <div class="story-card animate-up">
+            
+            <div class="story-content">
+                <h3>${story.title}</h3>
+                <p class="author">By ${story.author}</p>
+                <p class="story-type"><i data-lucide="tag" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i>${story.category || 'General'}</p>
+                <p class="excerpt">${story.content ? story.content.substring(0, 100) + '...' : 'Once upon a time...'}</p>
+                <div class="story-actions">
+                    <button class="btn-read" onclick="readStory('${story._id}')">Read Now</button>
+                    <button class="btn-fav" 
+                        onclick="toggleFavourite('${story._id}')" 
+                        ondblclick="removeFavourite('${story._id}')"
+                        title="Click to add, Double-click to remove">
+                        <i data-lucide="heart"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    if (window.lucide) window.lucide.createIcons();
+}
+
+// ── Read Story ───────────────────────────────────────────────────────────────
+const storyOverlay = document.getElementById('storyOverlay');
+const storyTitle   = document.getElementById('storyTitle');
+const storyMeta    = document.getElementById('storyMeta');
+const storyBody    = document.getElementById('storyBody');
+
+function readStory(id) {
+    const story = allStories.find(s => s._id === id);
+    if (!story) return;
+
+    storyTitle.textContent = story.title;
+    storyMeta.textContent  = `By ${story.author} | ${story.category || 'Story'}`;
+    storyBody.textContent  = story.content || 'No content available for this magical tale.';
+
+    storyOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling background
+}
+
+function closeStory() {
+    storyOverlay.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+// Close story modal on click outside
+storyOverlay.addEventListener('click', (e) => {
+    if (e.target === storyOverlay) closeStory();
+});
+
+// ── Toggle Favourite ─────────────────────────────────────────────────────────
+async function toggleFavourite(storyId) {
+    const savedUser = localStorage.getItem('user');
+    if (!savedUser) {
+        alert('Please login to save your favourite stories!');
+        openAuth('login');
+        return;
+    }
+    const user = JSON.parse(savedUser);
+
+    try {
+        const res = await fetch('/api/favourite/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userID: user._id || user.id, storyID: storyId })
+        });
+        if (res.ok) {
+            alert('Added to your favourites! ✨');
+        } else {
+            const data = await res.json();
+            alert(data.message || 'Already in favourites!');
+        }
+    } catch {
+        alert('Network error. Please try again.');
+    }
+}
+
+async function removeFavourite(storyId) {
+    const savedUser = localStorage.getItem('user');
+    if (!savedUser) return;
+    const user = JSON.parse(savedUser);
+
+    if (!confirm('Remove this story from your favourites?')) return;
+
+    try {
+        const userId = user._id || user.id;
+        const response = await fetch(`/api/favourite/remove/${userId}/${storyId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            alert('Removed from your favourites! 💫');
+        } else {
+            const data = await response.json();
+            alert(data.message || 'Could not remove from favourites.');
+        }
+    } catch (error) {
+        alert('Network error. Please try again.');
+    }
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', loadStories);

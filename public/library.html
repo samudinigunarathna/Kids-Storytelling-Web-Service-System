@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamTales | Magical Story Library</title>
+    <meta name="description" content="Browse our magical collection of hand-picked tales for your little ones.">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Library-specific styles */
+        .library-header {
+            background: url('/assets/library_background.jpg') center/cover no-repeat;
+            padding: 9rem 0 4rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .library-header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            color: #ff75a0;
+            position: relative;
+        }
+        .library-header p {
+            font-size: 1.2rem;
+            color: #ff75a0;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+        .search-bar-wrapper {
+            max-width: 550px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .search-bar-wrapper i {
+            position: absolute;
+            left: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 20px;
+            height: 20px;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 1.1rem 1.5rem 1.1rem 3.5rem;
+            border-radius: 50px;
+            border: none;
+            font-family: inherit;
+            font-size: 1rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            outline: none;
+            transition: var(--transition);
+        }
+        #searchInput:focus {
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+        }
+        .library-controls {
+            padding: 2.5rem 0 1rem;
+            background: var(--white);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .category-filters {
+            display: flex;
+            gap: 0.8rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            scrollbar-width: none;
+        }
+        .category-filters::-webkit-scrollbar { display: none; }
+        .category-btn {
+            background: var(--bg);
+            border: 2px solid transparent;
+            color: var(--text-muted);
+            padding: 0.5rem 1.4rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+        .category-btn:hover { border-color: var(--primary-light); color: var(--primary); }
+        .category-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .library-body {
+            padding: 4rem 0 6rem;
+            min-height: 60vh;
+        }
+        .stories-count {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+        .loading-state {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+        .loading-state p { font-size: 1.1rem; }
+        .nav-active {
+            color: var(--primary) !important;
+        }
+        .nav-active::after {
+            width: 100% !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+
+    <!-- Navbar -->
+    <nav id="navbar" class="scrolled">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">
+                <i data-lucide="sparkles"></i>
+                DreamTales
+            </a>
+            <div class="nav-links">
+                <div class="user-links" id="userLinks">
+                    <span id="navWelcome" style="color: var(--primary); font-weight: 600;"></span>
+                    <a href="index.html" onclick="goToDashboard(event)">Dashboard</a>
+                    <a href="admin.html" id="adminLink" style="display: none;">Admin</a>
+                    <a href="library.html" class="nav-active">Library</a>
+                    <button class="btn-login" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Library Header -->
+    <div class="library-header animate-up">
+        <h1>✨ Magical Story Library</h1>
+        <p>Discover wonderful tales handpicked for your little adventurers</p>
+        <div class="search-bar-wrapper">
+            <i data-lucide="search"></i>
+            <input type="text" id="searchInput" placeholder="Search by title or author...">
+        </div>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="library-controls">
+        <div class="container">
+            <div class="category-filters" id="categoryFilters">
+                <button class="category-btn active" onclick="filterByCategory('All')">All Stories</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stories Grid -->
+    <div class="library-body">
+        <div class="container">
+            <p class="stories-count" id="storiesCount"></p>
+            <div class="stories-grid" id="storiesGrid">
+                <div class="loading-state">
+                    <p>🌟 Loading magical stories...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Overlay (for edge cases) -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-modal">
+            <button class="close-btn" onclick="closeAuth()">
+                <i data-lucide="x"></i>
+            </button>
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="loginTab" onclick="toggleAuth('login')">Login</div>
+                <div class="auth-tab" id="registerTab" onclick="toggleAuth('register')">Register</div>
+            </div>
+            <form id="loginForm" class="auth-form">
+                <div class="form-group"><input type="email" placeholder="Email Address" required></div>
+                <div class="form-group"><input type="password" placeholder="Password" required></div>
+                <button type="submit" class="btn-primary">Welcome Back!</button>
+            </form>
+            <form id="registerForm" class="auth-form" style="display:none;">
+                <div class="form-group"><input type="text" placeholder="Your Name" required></div>
+                <div class="form-group"><input type="email" placeholder="Email Address" required></div>
+                <div class="form-group"><input type="password" placeholder="Password" required></div>
+                <div class="form-group"><input type="text" placeholder="Child's Name" required></div>
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Story Reader Modal -->
+    <div class="auth-overlay" id="storyOverlay">
+        <div class="auth-modal story-modal">
+            <button class="close-btn" onclick="closeStory()">
+                <i data-lucide="x"></i>
+            </button>
+            <div class="story-reader-content">
+                <h2 id="storyTitle">Story Title</h2>
+                <p class="story-meta" id="storyMeta">By Author | Category</p>
+                <div class="story-body" id="storyBody">
+                    Story content goes here...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="library.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

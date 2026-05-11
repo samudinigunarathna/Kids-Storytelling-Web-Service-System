@@ -1,5 +1,5 @@
 import express from "express";
-import { create, fetch, deleteFavourite } from "../controllers/favouriteController.js";
+import { create, fetch, deleteFavourite, removeByStoryID } from "../controllers/favouriteController.js";
 
 const route = express.Router();
 
@@ -7,5 +7,6 @@ const route = express.Router();
 route.post("/create", create);
 route.get("/getFavourites/:userID", fetch);
 route.delete("/delete/:id", deleteFavourite);
+route.delete("/remove/:userID/:storyID", removeByStoryID);
 
 export default route;

@@ -27,6 +27,9 @@ app.get("/favicon.ico", (req, res) => res.status(204).end());
 //Serve static files from public directory
 app.use(express.static("public"));
 
+//Serve assets folder (images, etc.)
+app.use("/assets", express.static("assets"));
+
 // CORS middleware with OPTIONS handling
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");

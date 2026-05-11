@@ -128,7 +128,8 @@ nav.scrolled {
     align-items: center;
 }
 
-.guest-links, .user-links {
+.guest-links,
+.user-links {
     display: flex;
     gap: 2.5rem;
     align-items: center;
@@ -403,9 +404,10 @@ section {
     margin-top: 3rem;
 }
 
-.profile-card, .stats-card {
-    background: var(--glass);
-    backdrop-filter: blur(15px);
+.profile-card,
+.stats-card {
+    background: rgba(255, 255, 255, 0.92); /* Increased opacity */
+    backdrop-filter: blur(10px);
     border-radius: 2rem;
     padding: 3rem;
     box-shadow: var(--shadow);
@@ -515,6 +517,7 @@ section {
         grid-template-columns: 1fr;
     }
 }
+
 .favourites-list {
     margin-top: 3rem;
 }
@@ -605,7 +608,7 @@ section {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background: var(--accent);
+    background: #ff75a0;
     color: white;
     padding: 0.4rem 1rem;
     border-radius: 20px;
@@ -619,15 +622,28 @@ section {
 
 .story-content h3 {
     font-size: 1.5rem;
-    color: var(--secondary);
+    color: #cd1d41;
     margin-bottom: 0.5rem;
 }
 
 .story-content .author {
     font-size: 0.9rem;
     color: var(--text-muted);
-    margin-bottom: 1rem;
+    margin-bottom: 0.4rem;
     font-weight: 500;
+}
+
+.story-content .story-type {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #ff75a0;
+    background: rgba(255, 117, 160, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 117, 160, 0.25);
 }
 
 .story-content .excerpt {
@@ -677,7 +693,85 @@ section {
     color: white;
 }
 
-.btn-fav i {
-    width: 20px;
-    height: 20px;
+/* Flying Assets Animation */
+.flying-assets-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Don't block clicks */
+    overflow: hidden;
+    z-index: -1;
+}
+
+.flying-asset {
+    position: absolute;
+    opacity: 0.5; /* Increased opacity */
+    filter: blur(0px); /* Removed blur for clearer images */
+    animation: fly linear infinite;
+    pointer-events: none;
+}
+
+@keyframes fly {
+    0% {
+        transform: translate(-100px, 0); /* Removed rotation */
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.5;
+    }
+    90% {
+        opacity: 0.5;
+    }
+    100% {
+        transform: translate(calc(100vw + 100px), calc(100vh * var(--y-end))); /* Removed rotation */
+        opacity: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .flying-asset {
+        width: 40px !important; /* Smaller on mobile */
+    }
+}
+
+/* Story Modal Specifics */
+.story-modal {
+    max-width: 800px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 3rem;
+}
+
+.story-reader-content h2 {
+    font-size: 2.5rem;
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem;
+}
+
+.story-meta {
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+    border-bottom: 1px solid var(--bg);
+    padding-bottom: 1rem;
+}
+
+.story-body {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: var(--text-main);
+    white-space: pre-wrap; /* Preserve line breaks from database */
+}
+
+@media (max-width: 768px) {
+    .story-modal {
+        padding: 2rem;
+    }
+    .story-reader-content h2 {
+        font-size: 1.8rem;
+    }
 }

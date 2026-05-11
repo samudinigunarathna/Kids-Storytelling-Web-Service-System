@@ -118,19 +118,32 @@ loginForm.addEventListener('submit', async (e) => {
 function updateAuthState(user) {
     const guestLinks = document.querySelector('.guest-links');
     const userLinks = document.querySelector('.user-links');
-    const landingPage = document.getElementById('landingPage');
-    const dashboardPage = document.getElementById('dashboardPage');
 
     if (user) {
         guestLinks.style.display = 'none';
         userLinks.style.display = 'flex';
+
+        // Redirect to library if that was the original intent
+        const redirect = sessionStorage.getItem('redirectAfterLogin');
+        sessionStorage.removeItem('redirectAfterLogin');
+        if (redirect === 'stories') {
+            window.location.href = 'library.html';
+            return;
+        }
+
         showSection('dashboard');
-        
+
         // Populate dashboard and nav
         document.getElementById('navWelcome').textContent = `Hi, ${user.name}!`;
         document.getElementById('userName').textContent = user.name;
         document.getElementById('userEmail').textContent = user.email;
         document.getElementById('childName').textContent = user.childName || 'Not specified';
+        // Show Admin link if user is admin
+        const adminLink = document.getElementById('adminLink');
+        if (adminLink) {
+            adminLink.style.display = user.role === 'admin' ? 'inline' : 'none';
+        }
+
         fetchStats(user);
     } else {
         guestLinks.style.display = 'flex';
@@ -143,14 +156,53 @@ function updateAuthState(user) {
 function showSection(section) {
     const landingPage = document.getElementById('landingPage');
     const dashboardPage = document.getElementById('dashboardPage');
-    
+
+    landingPage.style.display = 'none';
+    dashboardPage.style.display = 'none';
+
     if (section === 'dashboard') {
-        landingPage.style.display = 'none';
         dashboardPage.style.display = 'block';
-        window.scrollTo(0, 0);
+        createFlyingAssets();
     } else {
         landingPage.style.display = 'block';
-        dashboardPage.style.display = 'none';
+    }
+    window.scrollTo(0, 0);
+}
+
+function createFlyingAssets() {
+    const container = document.getElementById('flyingAssetsContainer');
+    if (!container) return;
+    
+    // Clear existing assets if any
+    container.innerHTML = '';
+    
+    const assetCount = 15;
+    const colors = ['#FF75A0', '#645CBB', '#FFC4D0', '#FF9AB9'];
+    
+    for (let i = 0; i < assetCount; i++) {
+        const asset = document.createElement('img');
+        asset.src = 'background_pic.png';
+        asset.className = 'flying-asset';
+        
+        // Randomize size
+        const size = Math.random() * 40 + 40; // 40px to 80px
+        asset.style.width = `${size}px`;
+        
+        // Randomize start position (Y axis)
+        const startY = Math.random() * 100;
+        asset.style.top = `${startY}vh`;
+        
+        // Randomize duration and delay
+        const duration = Math.random() * 15 + 10; // 10s to 25s
+        const delay = Math.random() * 10;
+        asset.style.animationDuration = `${duration}s`;
+        asset.style.animationDelay = `-${delay}s`; // Start mid-animation for variety
+        
+        // Randomize end trajectory
+        const yEnd = Math.random() * 2 - 1; // -1 to 1 (variation in vertical direction)
+        asset.style.setProperty('--y-end', yEnd);
+
+        container.appendChild(asset);
     }
 }
 
@@ -176,8 +228,10 @@ async function fetchStats(user) {
             if (favRes.ok) {
                 const favourites = await favRes.json();
                 document.getElementById('favouritesCount').textContent = favourites.length;
+                renderFavouritesGrid(favourites);
             } else if (favRes.status === 404) {
                 document.getElementById('favouritesCount').textContent = '0';
+                renderFavouritesGrid([]);
             }
         }
     } catch (error) {
@@ -185,56 +239,85 @@ async function fetchStats(user) {
     }
 }
 
-// Check auth state on load
-document.addEventListener('DOMContentLoaded', () => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-        const user = JSON.parse(savedUser);
-        updateAuthState(user);
-    }
-    loadStories();
-});
+let allFavourites = [];
 
-async function loadStories() {
-    const grid = document.getElementById('storiesGrid');
+function renderFavouritesGrid(favourites) {
+    const grid = document.getElementById('favouritesGrid');
     if (!grid) return;
 
-    try {
-        const response = await fetch('/api/story/getAllStories');
-        if (response.ok) {
-            const stories = await response.json();
-            grid.innerHTML = stories.map(story => `
-                <div class="story-card animate-up">
-                    <div class="story-badge">${story.category}</div>
-                    <div class="story-content">
-                        <h3>${story.title}</h3>
-                        <p class="author">By ${story.author}</p>
-                        <p class="excerpt">${story.content ? story.content.substring(0, 100) + '...' : 'Once upon a time...'}</p>
-                        <div class="story-actions">
-                            <button class="btn-read" onclick="readStory('${story._id}')">Read Now</button>
-                            <button class="btn-fav" onclick="toggleFavourite('${story._id}')">
-                                <i data-lucide="heart"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
-            // Re-initialize Lucide icons for new elements
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
-        } else {
-            grid.innerHTML = '<p>No stories found yet. Magical things are coming!</p>';
-        }
-    } catch (error) {
-        console.error('Error loading stories:', error);
-        grid.innerHTML = '<p>The library is currently undergoing some magic. Please check back later!</p>';
+    allFavourites = favourites; // Store for readStory
+
+    if (!favourites || favourites.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-msg">
+                <p>No favourites yet. Go explore the library! ✨</p>
+            </div>`;
+        return;
     }
+
+    grid.innerHTML = favourites.map(fav => {
+        const story = fav.storyID;
+        if (!story) return '';
+        return `
+            <div class="fav-card animate-up">
+                <div class="fav-info">
+                    <h4>${story.title}</h4>
+                    <p>${story.category || 'Story'}</p>
+                </div>
+                <button class="btn-read" onclick="readStory('${story._id}', true)">Read</button>
+            </div>
+        `;
+    }).join('');
 }
 
-function readStory(id) {
-    alert('Magical reading view coming soon! Story ID: ' + id);
+// ── Story Reader Logic ──────────────────────────────────────────────────────
+const storyOverlay = document.getElementById('storyOverlay');
+const storyTitle   = document.getElementById('storyTitle');
+const storyMeta    = document.getElementById('storyMeta');
+const storyBody    = document.getElementById('storyBody');
+
+function readStory(id, fromFavs = false) {
+    let story;
+    if (fromFavs) {
+        const fav = allFavourites.find(f => f.storyID && f.storyID._id === id);
+        story = fav ? fav.storyID : null;
+    } else {
+        // This would be from the landing page stories if they still existed there
+        // For now, we mainly use it for favs or we can fetch it
+        alert('Opening story...');
+    }
+
+    if (!story) {
+        // Fallback: if not in favs, we might need to fetch it
+        fetch(`/api/story/getStoryById/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                displayStory(data);
+            });
+        return;
+    }
+
+    displayStory(story);
+}
+
+function displayStory(story) {
+    storyTitle.textContent = story.title;
+    storyMeta.textContent  = `By ${story.author} | ${story.category || 'Story'}`;
+    storyBody.textContent  = story.content || 'No content available for this magical tale.';
+
+    storyOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeStory() {
+    storyOverlay.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+if (storyOverlay) {
+    storyOverlay.addEventListener('click', (e) => {
+        if (e.target === storyOverlay) closeStory();
+    });
 }
 
 async function toggleFavourite(storyId) {
@@ -305,5 +388,68 @@ registerForm.addEventListener('submit', async (e) => {
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;
+    }
+});
+
+function handleStartReading(event) {
+    event.preventDefault();
+    const user = localStorage.getItem('user');
+    if (!user) {
+        sessionStorage.setItem('redirectAfterLogin', 'stories');
+        openAuth('login');
+    } else {
+        window.location.href = 'library.html';
+    }
+}
+
+function handleHomeClick(event) {
+    event.preventDefault();
+    const user = localStorage.getItem('user');
+    if (user) {
+        showSection('dashboard');
+    } else {
+        openAuth('login');
+    }
+}
+
+async function removeFavourite(storyId) {
+    const savedUser = localStorage.getItem('user');
+    if (!savedUser) return;
+    const user = JSON.parse(savedUser);
+
+    if (!confirm('Remove this story from your favourites?')) return;
+
+    try {
+        const userId = user._id || user.id;
+        const response = await fetch(`/api/favourite/remove/${userId}/${storyId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            alert('Removed from your favourites! 💫');
+            fetchStats(user); // Refresh dashboard stats and grid
+        } else {
+            const data = await response.json();
+            alert(data.message || 'Could not remove from favourites.');
+        }
+    } catch (error) {
+        alert('Network error. Please try again.');
+    }
+}
+
+// Check auth state on load
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    
+    // Handle redirect from library.html auth guard
+    if (params.get('redirect') === 'library' || params.get('openAuth') === 'login') {
+        sessionStorage.setItem('redirectAfterLogin', 'stories');
+        openAuth('login');
+    }
+
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+        const user = JSON.parse(savedUser);
+        updateAuthState(user);
     }
 });

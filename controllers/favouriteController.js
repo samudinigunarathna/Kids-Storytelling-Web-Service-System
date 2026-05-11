@@ -27,8 +27,8 @@ export const create = async (req, res) => {
 export const fetch = async (req, res) => {
     try {
         const userID = req.params.userID;
-        //Find all favourites for the user
-        const favourites = await favourite.find({ userID });
+        //Find all favourites for the user and populate story details
+        const favourites = await favourite.find({ userID }).populate("storyID");
         //Check if favourites are not available, then send a error response
         if (!favourites || favourites.length === 0) {
             return res.status(404).json({ message: "No favourite stories found for this user." })
@@ -61,5 +61,17 @@ export const deleteFavourite = async (req, res) => {
     catch (error) {
         //Handle any errors
         res.status(500).json({ message: "Internal server error." })
+    }
+}
+export const removeByStoryID = async (req, res) => {
+    try {
+        const { userID, storyID } = req.params;
+        const result = await favourite.findOneAndDelete({ userID, storyID });
+        if (!result) {
+            return res.status(404).json({ message: "Favourite not found" });
+        }
+        res.status(200).json({ message: "Removed from favourites successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
     }
 }

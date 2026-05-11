@@ -42,6 +42,27 @@ export const fetch = async (req, res) => {
     }
 }
 
+export const getById = async (req, res) => {
+    try {
+        const id = req.params.id;
+        
+        // Use findById for cleaner syntax and better built-in ID handling
+        const storyData = await story.findById(id);
+        
+        if (!storyData) {
+            return res.status(404).json({ message: "Story not found." })
+        }
+        
+        res.status(200).json(storyData);
+    } catch (error) {
+        // Handle potential CastError (invalid ID format)
+        if (error.name === 'CastError') {
+            return res.status(400).json({ message: "Invalid story ID format." });
+        }
+        res.status(500).json({ message: "Internal server error." })
+    }
+}
+
 export const update = async (req, res) => {
     try {
         //Extract story id from request parameters
