@@ -144,17 +144,17 @@
     <div class="library-header animate-up">
         <h1>✨ Magical Story Library</h1>
         <p>Discover wonderful tales handpicked for your little adventurers</p>
-        <div class="search-bar-wrapper">
-            <i data-lucide="search"></i>
-            <input type="text" id="searchInput" placeholder="Search by title or author...">
-        </div>
     </div>
 
-    <!-- Category Filters -->
+    <!-- Category Filters & Search -->
     <div class="library-controls">
-        <div class="container">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap;">
             <div class="category-filters" id="categoryFilters">
                 <button class="category-btn active" onclick="filterByCategory('All')">All Stories</button>
+            </div>
+            <div class="search-bar-wrapper" style="margin-top: 0; max-width: 400px; flex: 1;">
+                <i data-lucide="search"></i>
+                <input type="text" id="searchInput" placeholder="Search by title or author...">
             </div>
         </div>
     </div>

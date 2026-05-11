@@ -775,3 +775,113 @@ section {
         font-size: 1.8rem;
     }
 }
+
+/* Library Page Styles */
+.library-header {
+    padding: 10rem 0 4rem;
+    text-align: center;
+    background: linear-gradient(to bottom, var(--bg), #FFF);
+}
+
+.library-header h1 {
+    font-size: 3.5rem;
+    color: var(--primary-dark);
+    margin-bottom: 1rem;
+}
+
+.library-header p {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.library-controls {
+    padding: 2rem 0;
+    background: white;
+    position: sticky;
+    top: 70px;
+    z-index: 100;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.02);
+}
+
+.category-filters {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+.category-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 50px;
+    border: 2px solid var(--bg);
+    background: var(--bg);
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.category-btn:hover, .category-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.search-bar-wrapper {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--bg);
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem 0.4rem 2.5rem;
+    transition: var(--transition);
+    max-width: 280px;
+    display: flex;
+    align-items: center;
+}
+
+.search-bar-wrapper:focus-within {
+    border-color: var(--primary-light);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+.search-bar-wrapper i {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+}
+
+.search-bar-wrapper input {
+    width: 100%;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    color: var(--text-main);
+}
+
+.library-body {
+    padding: 4rem 0;
+}
+
+.stories-count {
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.loading-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 5rem;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+}
