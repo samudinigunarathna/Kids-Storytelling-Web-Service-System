@@ -79,8 +79,25 @@ document.querySelectorAll('section > div').forEach(el => {
 });
 
 // API Helper for Authenticated Requests
+// API Helper for Authenticated Requests
 async function authFetch(url, options = {}) {
     const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    console.log('authFetch check - Token:', token ? 'Exists' : 'MISSING', 'User:', savedUser ? 'Exists' : 'MISSING');
+    
+    // If we're trying to hit an API route that isn't login/create, we probably need a token
+    const isAuthRoute = url.includes('/api/user/login') || url.includes('/api/user/create') || url.includes('/api/story/getAllStories') || url.includes('/api/story/getStoryById');
+    
+    if (!token && !isAuthRoute) {
+        console.warn('Blocking request: No token found for protected route');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        updateAuthState(null);
+        openAuth('login');
+        throw new Error('Please login to continue.');
+    }
+
+
     const headers = {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -88,9 +105,13 @@ async function authFetch(url, options = {}) {
 
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+        console.log('Sending token in header:', `Bearer ${token.substring(0, 10)}...`);
+    } else {
+        console.warn('No token found in localStorage for authFetch');
     }
 
     const response = await fetch(url, { ...options, headers });
+
     
     if (response.status === 401) {
         // Token expired or invalid
@@ -103,6 +124,7 @@ async function authFetch(url, options = {}) {
     
     return response;
 }
+
 
 // Auth Integration
 loginForm.addEventListener('submit', async (e) => {
@@ -563,9 +585,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+    const token = localStorage.getItem('token');
+    
+    if (savedUser && token) {
         const user = JSON.parse(savedUser);
         updateAuthState(user);
+    } else {
+        // If one is missing, clear both to be safe
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        updateAuthState(null);
     }
 });
+
 

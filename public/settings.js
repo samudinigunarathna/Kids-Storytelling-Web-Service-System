@@ -1,6 +1,10 @@
 // ── Auth Guard ─────────────────────────────────────────────────────────────
 const savedUser = localStorage.getItem('user');
-if (!savedUser) {
+const token = localStorage.getItem('token');
+
+if (!savedUser || !token) {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     window.location.href = 'index.html?redirect=settings';
 }
 const user = JSON.parse(savedUser || '{}');
@@ -8,6 +12,17 @@ const user = JSON.parse(savedUser || '{}');
 // API Helper for Authenticated Requests
 async function authFetch(url, options = {}) {
     const token = localStorage.getItem('token');
+    
+    // Public routes don't strictly need a token (though settings shouldn't use them)
+    const isPublicRoute = url.includes('/api/story/getAllStories') || url.includes('/api/story/getStoryById');
+
+    if (!token && !isPublicRoute) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        window.location.href = 'index.html?openAuth=login';
+        throw new Error('Please login to continue.');
+    }
+
     const headers = {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -28,6 +43,7 @@ async function authFetch(url, options = {}) {
     
     return response;
 }
+
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
