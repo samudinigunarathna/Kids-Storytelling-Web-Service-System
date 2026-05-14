@@ -5,22 +5,55 @@ if (!savedUser) {
 }
 const user = JSON.parse(savedUser || '{}');
 
+// API Helper for Authenticated Requests
+async function authFetch(url, options = {}) {
+    const token = localStorage.getItem('token');
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+    };
+
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, { ...options, headers });
+    
+    if (response.status === 401) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        window.location.href = 'index.html?openAuth=login';
+        throw new Error('Session expired. Please login again.');
+    }
+    
+    return response;
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     populateProfile();
-    document.getElementById('navWelcome').textContent = `Hi, ${user.name}! 👋`;
+    const welcome = document.getElementById('navWelcome');
+    if (welcome) welcome.textContent = `Hi, ${user.name}! 👋`;
 
     // Setup form listeners
-    document.getElementById('profileForm').addEventListener('submit', handleProfileUpdate);
-    document.getElementById('passwordForm').addEventListener('submit', handlePasswordUpdate);
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) profileForm.addEventListener('submit', handleProfileUpdate);
+    
+    const passwordForm = document.getElementById('passwordForm');
+    if (passwordForm) passwordForm.addEventListener('submit', handlePasswordUpdate);
 });
 
 // ── Populate Profile ─────────────────────────────────────────────────────────
 function populateProfile() {
-    document.getElementById('profileName').value = user.name || '';
-    document.getElementById('profileEmail').value = user.email || '';
-    document.getElementById('profileChildName').value = user.childName || '';
-    document.getElementById('profileRole').value = user.role || 'user';
+    const nameInput = document.getElementById('profileName');
+    const emailInput = document.getElementById('profileEmail');
+    const childNameInput = document.getElementById('profileChildName');
+    const roleInput = document.getElementById('profileRole');
+
+    if (nameInput) nameInput.value = user.name || '';
+    if (emailInput) emailInput.value = user.email || '';
+    if (childNameInput) childNameInput.value = user.childName || '';
+    if (roleInput) roleInput.value = user.role || 'user';
 }
 
 // ── Navigation ──────────────────────────────────────────────────────────────
@@ -34,7 +67,8 @@ function switchSection(sectionId) {
     document.querySelectorAll('.settings-section').forEach(section => {
         section.classList.remove('active');
     });
-    document.getElementById(`${sectionId}Section`).classList.add('active');
+    const targetSection = document.getElementById(`${sectionId}Section`);
+    if (targetSection) targetSection.classList.add('active');
 }
 
 function goToDashboard(e) {
@@ -44,6 +78,7 @@ function goToDashboard(e) {
 
 function logout() {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     window.location.href = 'index.html';
 }
 
@@ -60,9 +95,8 @@ async function handleEmailUpdate() {
     }
 
     try {
-        const response = await fetch(`/api/user/update/${user._id || user.id}`, {
+        const response = await authFetch(`/api/user/update/${user._id || user.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: newEmail })
         });
 
@@ -78,7 +112,7 @@ async function handleEmailUpdate() {
         }
     } catch (error) {
         console.error('Update error:', error);
-        alert('Network error. Please try again.');
+        alert(error.message || 'Network error. Please try again.');
     }
 }
 
@@ -92,9 +126,8 @@ async function handleProfileUpdate(e) {
     };
 
     try {
-        const response = await fetch(`/api/user/update/${user._id || user.id}`, {
+        const response = await authFetch(`/api/user/update/${user._id || user.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData)
         });
 
@@ -111,11 +144,11 @@ async function handleProfileUpdate(e) {
         }
     } catch (error) {
         console.error('Update error:', error);
-        alert('Network error. Please try again.');
+        alert(error.message || 'Network error. Please try again.');
     }
 }
 
-// ── Password Update (Simulated) ──────────────────────────────────────────────
+// ── Password Update ─────────────────────────────────────────────────────────
 async function handlePasswordUpdate(e) {
     e.preventDefault();
     const current = document.getElementById('currentPassword').value;
@@ -133,9 +166,9 @@ async function handlePasswordUpdate(e) {
     }
 
     try {
-        const response = await fetch(`/api/user/update/${user._id || user.id}`, {
+        // In a real app, we'd verify 'current' password on the backend too.
+        const response = await authFetch(`/api/user/update/${user._id || user.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: newPass })
         });
 
@@ -146,7 +179,7 @@ async function handlePasswordUpdate(e) {
             alert('Failed to change password.');
         }
     } catch (error) {
-        alert('Network error. Please try again.');
+        alert(error.message || 'Network error. Please try again.');
     }
 }
 
@@ -157,18 +190,20 @@ async function deleteAccount() {
     }
 
     try {
-        const response = await fetch(`/api/user/delete/${user._id || user.id}`, {
+        const response = await authFetch(`/api/user/delete/${user._id || user.id}`, {
             method: 'DELETE'
         });
 
         if (response.ok) {
             alert('Your account has been deleted. We are sorry to see you go! 👋');
             localStorage.removeItem('user');
+            localStorage.removeItem('token');
             window.location.href = 'index.html';
         } else {
             alert('Failed to delete account.');
         }
     } catch (error) {
-        alert('Network error. Please try again.');
+        alert(error.message || 'Network error. Please try again.');
     }
 }
+

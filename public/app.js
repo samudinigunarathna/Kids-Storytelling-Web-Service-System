@@ -78,6 +78,32 @@ document.querySelectorAll('section > div').forEach(el => {
     }
 });
 
+// API Helper for Authenticated Requests
+async function authFetch(url, options = {}) {
+    const token = localStorage.getItem('token');
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+    };
+
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, { ...options, headers });
+    
+    if (response.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        updateAuthState(null);
+        openAuth('login');
+        throw new Error('Session expired. Please login again.');
+    }
+    
+    return response;
+}
+
 // Auth Integration
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -114,6 +140,7 @@ loginForm.addEventListener('submit', async (e) => {
             alert('Welcome back to DreamTales!');
             closeAuth();
             localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
             updateAuthState(data.user);
         } else {
             alert('Error: ' + (data.message || 'Login failed'));
@@ -159,7 +186,8 @@ function updateAuthState(user) {
     } else {
         guestLinks.style.display = 'flex';
         userLinks.style.display = 'none';
-        document.getElementById('navWelcome').textContent = '';
+        const welcome = document.getElementById('navWelcome');
+        if (welcome) welcome.textContent = '';
         showSection('landing');
     }
 }
@@ -168,13 +196,13 @@ function showSection(section) {
     const landingPage = document.getElementById('landingPage');
     const dashboardPage = document.getElementById('dashboardPage');
 
-    landingPage.style.display = 'none';
-    dashboardPage.style.display = 'none';
+    if (landingPage) landingPage.style.display = 'none';
+    if (dashboardPage) dashboardPage.style.display = 'none';
 
-    if (section === 'dashboard') {
+    if (section === 'dashboard' && dashboardPage) {
         dashboardPage.style.display = 'block';
         createFlyingAssets();
-    } else {
+    } else if (landingPage) {
         landingPage.style.display = 'block';
     }
     window.scrollTo(0, 0);
@@ -219,6 +247,7 @@ function createFlyingAssets() {
 
 function logout() {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     updateAuthState(null);
     alert('Logged out. See you soon!');
 }
@@ -235,7 +264,7 @@ async function fetchStats(user) {
         // Fetch Favourites for current user
         if (user && (user._id || user.id)) {
             const userId = user._id || user.id;
-            const favRes = await fetch(`/api/favourite/getFavourites/${userId}`);
+            const favRes = await authFetch(`/api/favourite/getFavourites/${userId}`);
             if (favRes.ok) {
                 const favourites = await favRes.json();
                 document.getElementById('favouritesCount').textContent = favourites.length;
@@ -393,9 +422,8 @@ async function toggleFavourite(storyId) {
     }
 
     try {
-        const response = await fetch('/api/favourite/create', {
+        const response = await authFetch('/api/favourite/create', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 userID: user._id || user.id,
                 storyID: storyId
@@ -410,7 +438,7 @@ async function toggleFavourite(storyId) {
             alert(data.message || 'Already in favourites!');
         }
     } catch (error) {
-        alert('Network error. Please try again.');
+        alert(error.message || 'Network error. Please try again.');
     }
 }
 
@@ -464,8 +492,9 @@ registerForm.addEventListener('submit', async (e) => {
         if (response.ok) {
             alert('Account created! Let the stories begin. ✨');
             closeAuth();
-            localStorage.setItem('user', JSON.stringify(data));
-            updateAuthState(data);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
+            updateAuthState(data.user);
         } else {
             alert('Error: ' + (data.message || 'Registration failed'));
         }
@@ -507,7 +536,7 @@ async function removeFavourite(storyId) {
 
     try {
         const userId = user._id || user.id;
-        const response = await fetch(`/api/favourite/remove/${userId}/${storyId}`, {
+        const response = await authFetch(`/api/favourite/remove/${userId}/${storyId}`, {
             method: 'DELETE'
         });
 
@@ -519,7 +548,7 @@ async function removeFavourite(storyId) {
             alert(data.message || 'Could not remove from favourites.');
         }
     } catch (error) {
-        alert('Network error. Please try again.');
+        alert(error.message || 'Network error. Please try again.');
     }
 }
 
@@ -539,3 +568,4 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAuthState(user);
     }
 });
+

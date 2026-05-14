@@ -1,3 +1,32 @@
+// API Helper for Authenticated Requests
+async function authFetch(url, options = {}) {
+    const token = localStorage.getItem('token');
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+    };
+
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, { ...options, headers });
+    
+    if (response.status === 401 || response.status === 403) {
+        // Token expired or insufficient permissions
+        if (response.status === 401) {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'index.html?openAuth=login';
+        } else {
+            alert('Access Denied: You do not have permission for this action.');
+        }
+        throw new Error('Authorization failed');
+    }
+    
+    return response;
+}
+
 // Admin Page Protection
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Admin page loaded, checking auth...');
@@ -27,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadUsers() {
     const tableBody = document.getElementById('userTableBody');
     try {
-        const response = await fetch('/api/user/getAllUsers');
+        const response = await authFetch('/api/user/getAllUsers');
         if (response.ok) {
             const users = await response.json();
             renderUsers(users);
@@ -42,6 +71,8 @@ async function loadUsers() {
 
 function renderUsers(users) {
     const tableBody = document.getElementById('userTableBody');
+    if (!tableBody) return;
+    
     if (users.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No users found in the kingdom yet.</td></tr>';
         return;
@@ -77,7 +108,7 @@ async function deleteUser(id) {
     if (!confirm('Are you sure you want to banish this user from the kingdom? 🧙‍♂️')) return;
 
     try {
-        const response = await fetch(`/api/user/delete/${id}`, { method: 'DELETE' });
+        const response = await authFetch(`/api/user/delete/${id}`, { method: 'DELETE' });
         if (response.ok) {
             alert('User removed successfully.');
             loadUsers();
@@ -85,7 +116,7 @@ async function deleteUser(id) {
             alert('Failed to remove user.');
         }
     } catch (error) {
-        alert('Network error.');
+        console.error('Delete user error:', error);
     }
 }
 
@@ -94,9 +125,8 @@ async function toggleRole(id, currentRole) {
     if (!confirm(`Change this user's role to ${newRole}?`)) return;
 
     try {
-        const response = await fetch(`/api/user/update/${id}`, {
+        const response = await authFetch(`/api/user/update/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ role: newRole })
         });
         if (response.ok) {
@@ -106,7 +136,7 @@ async function toggleRole(id, currentRole) {
             alert('Failed to update role.');
         }
     } catch (error) {
-        alert('Network error.');
+        console.error('Toggle role error:', error);
     }
 }
 
@@ -128,6 +158,8 @@ async function loadStories() {
 
 function renderStories(stories) {
     const tableBody = document.getElementById('storyTableBody');
+    if (!tableBody) return;
+    
     if (stories.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">The library is empty. Time to write some magic!</td></tr>';
         return;
@@ -202,7 +234,7 @@ async function deleteStory(id) {
     if (!confirm('Are you sure you want to delete this magical tale? It will be lost forever! 📖🔥')) return;
 
     try {
-        const response = await fetch(`/api/story/delete/${id}`, { method: 'DELETE' });
+        const response = await authFetch(`/api/story/delete/${id}`, { method: 'DELETE' });
         
         if (response.ok) {
             alert('Story deleted successfully.');
@@ -211,7 +243,7 @@ async function deleteStory(id) {
             alert('Failed to delete story.');
         }
     } catch (error) {
-        alert('Network error.');
+        console.error('Delete story error:', error);
     }
 }
 
@@ -231,9 +263,8 @@ if (storyFormElement) {
         const method = id ? 'PUT' : 'POST';
 
         try {
-            const response = await fetch(url, {
+            const response = await authFetch(url, {
                 method: method,
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(storyData)
             });
 
@@ -246,12 +277,14 @@ if (storyFormElement) {
                 alert(data.message || 'Error saving story.');
             }
         } catch (error) {
-            alert('Network error while saving story.');
+            console.error('Save story error:', error);
         }
     });
 }
 
 function logout() {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     window.location.href = 'index.html';
 }
+

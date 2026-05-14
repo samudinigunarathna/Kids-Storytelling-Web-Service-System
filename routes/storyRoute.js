@@ -1,13 +1,17 @@
 import express from "express";
 import { create, fetch, update, deleteStory, getById } from "../controllers/storyController.js";
+import { authMiddleware, adminMiddleware } from "../middleware/authMiddleware.js";
 
 const route = express.Router();
 
-//Define routes for create, fetch, update, and delete
-route.post("/create", create);
+// Public routes
 route.get("/getAllStories", fetch);
 route.get("/getStoryById/:id", getById);
-route.put("/update/:id", update);
-route.delete("/delete/:id", deleteStory);
+
+// Admin-only routes
+route.post("/create", authMiddleware, adminMiddleware, create);
+route.put("/update/:id", authMiddleware, adminMiddleware, update);
+route.delete("/delete/:id", authMiddleware, adminMiddleware, deleteStory);
 
 export default route;
+

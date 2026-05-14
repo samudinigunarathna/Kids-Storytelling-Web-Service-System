@@ -5,6 +5,30 @@ if (!savedUser) {
 }
 const user = JSON.parse(savedUser || '{}');
 
+// API Helper for Authenticated Requests
+async function authFetch(url, options = {}) {
+    const token = localStorage.getItem('token');
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+    };
+
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, { ...options, headers });
+    
+    if (response.status === 401) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        window.location.href = 'index.html?openAuth=login';
+        throw new Error('Session expired. Please login again.');
+    }
+    
+    return response;
+}
+
 // ── Navbar ──────────────────────────────────────────────────────────────────
 window.addEventListener('scroll', () => {
     const nav = document.getElementById('navbar');
@@ -36,6 +60,7 @@ function handleHomeClick(e) {
 
 function logout() {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     window.location.href = 'index.html';
 }
 
@@ -50,12 +75,14 @@ function openAuth(mode) { authOverlay.classList.add('active'); toggleAuth(mode);
 function closeAuth() { authOverlay.classList.remove('active'); }
 function toggleAuth(mode) {
     const isLogin = mode === 'login';
-    loginTab.classList.toggle('active', isLogin);
-    registerTab.classList.toggle('active', !isLogin);
-    loginForm.style.display = isLogin ? 'flex' : 'none';
-    registerForm.style.display = isLogin ? 'none' : 'flex';
+    if (loginTab) loginTab.classList.toggle('active', isLogin);
+    if (registerTab) registerTab.classList.toggle('active', !isLogin);
+    if (loginForm) loginForm.style.display = isLogin ? 'flex' : 'none';
+    if (registerForm) registerForm.style.display = isLogin ? 'none' : 'flex';
 }
-authOverlay.addEventListener('click', (e) => { if (e.target === authOverlay) closeAuth(); });
+if (authOverlay) {
+    authOverlay.addEventListener('click', (e) => { if (e.target === authOverlay) closeAuth(); });
+}
 
 // ── Story Data ───────────────────────────────────────────────────────────────
 let allStories = [];
@@ -83,6 +110,7 @@ async function loadStories() {
 function renderCategories() {
     const cats = ['All', ...new Set(allStories.map(s => s.category).filter(Boolean))];
     const container = document.getElementById('categoryFilters');
+    if (!container) return;
     container.innerHTML = cats.map(cat => `
         <button class="category-btn ${cat === 'All' ? 'active' : ''}"
                 onclick="filterByCategory('${cat}')">${cat === 'All' ? 'All Stories' : cat}</button>
@@ -99,10 +127,13 @@ function filterByCategory(cat) {
 }
 
 // ── Search ───────────────────────────────────────────────────────────────────
-document.getElementById('searchInput').addEventListener('input', (e) => {
-    searchQuery = e.target.value;
-    applyFilters();
-});
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        applyFilters();
+    });
+}
 
 // ── Filter + Render ──────────────────────────────────────────────────────────
 function applyFilters() {
@@ -121,35 +152,39 @@ function renderStories(stories) {
     const grid = document.getElementById('storiesGrid');
     const count = document.getElementById('storiesCount');
 
-    count.textContent = stories.length
-        ? `Showing ${stories.length} ${stories.length === 1 ? 'story' : 'stories'}`
-        : '';
+    if (count) {
+        count.textContent = stories.length
+            ? `Showing ${stories.length} ${stories.length === 1 ? 'story' : 'stories'}`
+            : '';
+    }
 
     if (!stories.length) {
-        grid.innerHTML = '<div class="loading-state"><p>No stories match your search. Try something else! 🔍</p></div>';
+        if (grid) grid.innerHTML = '<div class="loading-state"><p>No stories match your search. Try something else! 🔍</p></div>';
         return;
     }
 
-    grid.innerHTML = stories.map(story => `
-        <div class="story-card animate-up">
-            
-            <div class="story-content">
-                <h3>${story.title}</h3>
-                <p class="author">By ${story.author}</p>
-                <p class="story-type"><i data-lucide="tag" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i>${story.category || 'General'}</p>
-                <p class="excerpt">${story.content ? story.content.substring(0, 100) + '...' : 'Once upon a time...'}</p>
-                <div class="story-actions">
-                    <button class="btn-read" onclick="readStory('${story._id}')">Read Now</button>
-                    <button class="btn-fav" 
-                        onclick="toggleFavourite('${story._id}')" 
-                        ondblclick="removeFavourite('${story._id}')"
-                        title="Click to add, Double-click to remove">
-                        <i data-lucide="heart"></i>
-                    </button>
+    if (grid) {
+        grid.innerHTML = stories.map(story => `
+            <div class="story-card animate-up">
+                
+                <div class="story-content">
+                    <h3>${story.title}</h3>
+                    <p class="author">By ${story.author}</p>
+                    <p class="story-type"><i data-lucide="tag" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i>${story.category || 'General'}</p>
+                    <p class="excerpt">${story.content ? story.content.substring(0, 100) + '...' : 'Once upon a time...'}</p>
+                    <div class="story-actions">
+                        <button class="btn-read" onclick="readStory('${story._id}')">Read Now</button>
+                        <button class="btn-fav" 
+                            onclick="toggleFavourite('${story._id}')" 
+                            ondblclick="removeFavourite('${story._id}')"
+                            title="Click to add, Double-click to remove">
+                            <i data-lucide="heart"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `).join('');
+    }
 
     if (window.lucide) window.lucide.createIcons();
 }
@@ -242,24 +277,25 @@ function closeStory() {
 }
 
 // Close story modal on click outside
-storyOverlay.addEventListener('click', (e) => {
-    if (e.target === storyOverlay) closeStory();
-});
+if (storyOverlay) {
+    storyOverlay.addEventListener('click', (e) => {
+        if (e.target === storyOverlay) closeStory();
+    });
+}
 
 // ── Toggle Favourite ─────────────────────────────────────────────────────────
 async function toggleFavourite(storyId) {
     const savedUser = localStorage.getItem('user');
     if (!savedUser) {
         alert('Please login to save your favourite stories!');
-        openAuth('login');
+        window.location.href = 'index.html?openAuth=login';
         return;
     }
     const user = JSON.parse(savedUser);
 
     try {
-        const res = await fetch('/api/favourite/create', {
+        const res = await authFetch('/api/favourite/create', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userID: user._id || user.id, storyID: storyId })
         });
         if (res.ok) {
@@ -268,8 +304,8 @@ async function toggleFavourite(storyId) {
             const data = await res.json();
             alert(data.message || 'Already in favourites!');
         }
-    } catch {
-        alert('Network error. Please try again.');
+    } catch (err) {
+        alert(err.message || 'Network error. Please try again.');
     }
 }
 
@@ -282,7 +318,7 @@ async function removeFavourite(storyId) {
 
     try {
         const userId = user._id || user.id;
-        const response = await fetch(`/api/favourite/remove/${userId}/${storyId}`, {
+        const response = await authFetch(`/api/favourite/remove/${userId}/${storyId}`, {
             method: 'DELETE'
         });
 
@@ -293,9 +329,10 @@ async function removeFavourite(storyId) {
             alert(data.message || 'Could not remove from favourites.');
         }
     } catch (error) {
-        alert('Network error. Please try again.');
+        alert(error.message || 'Network error. Please try again.');
     }
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', loadStories);
+
