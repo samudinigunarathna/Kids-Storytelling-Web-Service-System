@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamTales | Settings</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .settings-container {
+            padding: 10rem 0 6rem;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg) 0%, #fff 100%);
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .settings-sidebar {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 2rem;
+            box-shadow: var(--shadow);
+            height: fit-content;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-item:hover,
+        .sidebar-item.active {
+            background: rgba(255, 117, 160, 0.1);
+            color: var(--primary);
+        }
+
+        .settings-content {
+            background: var(--white);
+            padding: 3.5rem;
+            border-radius: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .settings-section {
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        .settings-section h2 {
+            font-size: 2.2rem;
+            color: var(--primary-dark);
+            margin-bottom: 2rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .input-group input {
+            padding: 1.2rem;
+            border-radius: 1rem;
+            border: 2px solid var(--bg);
+            background: var(--bg);
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            background: var(--white);
+        }
+
+        .preference-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--bg);
+        }
+
+        .preference-info h4 {
+            color: var(--text-main);
+            margin-bottom: 0.2rem;
+        }
+
+        .preference-info p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(30px);
+        }
+
+        .btn-save {
+            margin-top: 2rem;
+            width: 100%;
+        }
+
+        @media (max-width: 992px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-sidebar {
+                display: flex;
+                overflow-x: auto;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .sidebar-item {
+                margin-bottom: 0;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+
+    <nav id="navbar" class="scrolled">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">
+                <i data-lucide="sparkles"></i>
+                DreamTales
+            </a>
+            <div class="nav-links">
+                <div class="user-links">
+                    <span id="navWelcome" style="color: var(--primary); font-weight: 600;"></span>
+                    <a href="index.html" onclick="goToDashboard(event)">Dashboard</a>
+                    <a href="library.html">Library</a>
+                    <a href="settings.html" class="nav-active"
+                        style="color: var(--primary); font-weight: 600;">Settings</a>
+                    <button class="btn-login" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="settings-container">
+        <div class="container">
+            <div class="section-title animate-up">
+                <h2>Account Settings</h2>
+                <p>Customize your magical experience and profile</p>
+            </div>
+
+            <div class="settings-grid animate-up" style="animation-delay: 0.2s;">
+                <aside class="settings-sidebar">
+                    <div class="sidebar-item active" onclick="switchSection('profile')">
+                        <i data-lucide="user"></i> Profile
+                    </div>
+                    <div class="sidebar-item" onclick="switchSection('account')">
+                        <i data-lucide="shield-check"></i> Account Security
+                    </div>
+                </aside>
+
+                <main class="settings-content">
+                    <!-- Profile Section -->
+                    <div id="profileSection" class="settings-section active">
+                        <h2>Personal Information</h2>
+                        <form id="profileForm">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="profileName">Your Name</label>
+                                    <input type="text" id="profileName" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="profileEmail">Email Address</label>
+                                    <input type="email" id="profileEmail" readonly
+                                        style="opacity: 0.7; cursor: not-allowed;">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="profileChildName">Child's Name</label>
+                                    <input type="text" id="profileChildName" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="profileRole">Account Role</label>
+                                    <input type="text" id="profileRole" readonly
+                                        style="opacity: 0.7; cursor: not-allowed;">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary btn-save">Update Profile</button>
+                        </form>
+                    </div>
+
+
+
+                    <!-- Account Security Section -->
+                    <div id="accountSection" class="settings-section">
+                        <h2>Account Security</h2>
+                        <form id="passwordForm">
+                            <div class="input-group" style="margin-bottom: 1.5rem;">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" id="currentPassword" placeholder="••••••••">
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="newPassword">New Password</label>
+                                    <input type="password" id="newPassword" placeholder="••••••••">
+                                </div>
+                                <div class="input-group">
+                                    <label for="confirmPassword">Confirm New Password</label>
+                                    <input type="password" id="confirmPassword" placeholder="••••••••">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary btn-save">Change Password</button>
+                        </form>
+                        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--bg);">
+                            <h3 style="color: #ff4757; margin-bottom: 1rem;">Danger Zone</h3>
+                            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Once you delete your account,
+                                there is no going back. Please be certain.</p>
+                            <button class="btn-login" style="border-color: #ff4757; color: #ff4757;"
+                                onclick="deleteAccount()">Delete Account</button>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script src="settings.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

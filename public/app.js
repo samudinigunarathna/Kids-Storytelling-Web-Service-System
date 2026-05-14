@@ -85,6 +85,18 @@ loginForm.addEventListener('submit', async (e) => {
     const email = e.target.querySelector('input[type="email"]').value;
     const password = e.target.querySelector('input[type="password"]').value;
     
+    // Basic validation
+    if (!email || !password) {
+        alert('Please fill in all fields.');
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address.');
+        return;
+    }
+
     const originalText = btn.textContent;
     btn.textContent = 'Logging in...';
     btn.disabled = true;
@@ -101,7 +113,6 @@ loginForm.addEventListener('submit', async (e) => {
         if (response.ok) {
             alert('Welcome back to DreamTales!');
             closeAuth();
-            // You could store the user data in localStorage here
             localStorage.setItem('user', JSON.stringify(data.user));
             updateAuthState(data.user);
         } else {
@@ -279,20 +290,24 @@ const storyBody    = document.getElementById('storyBody');
 function readStory(id, fromFavs = false) {
     let story;
     if (fromFavs) {
-        const fav = allFavourites.find(f => f.storyID && f.storyID._id === id);
+        const fav = (allFavourites || []).find(f => f.storyID && (f.storyID._id === id || f.storyID.id === id));
         story = fav ? fav.storyID : null;
-    } else {
-        // This would be from the landing page stories if they still existed there
-        // For now, we mainly use it for favs or we can fetch it
-        alert('Opening story...');
     }
 
     if (!story) {
-        // Fallback: if not in favs, we might need to fetch it
+        // Fallback: if not in favs, we fetch it
         fetch(`/api/story/getStoryById/${id}`)
             .then(res => res.json())
             .then(data => {
-                displayStory(data);
+                if (data && data.title) {
+                    displayStory(data);
+                } else {
+                    alert('Oops! This story could not be found. 🪄');
+                }
+            })
+            .catch(err => {
+                console.error('Fetch error:', err);
+                alert('Magical connection lost. Please try again! 🌐');
             });
         return;
     }
@@ -301,15 +316,64 @@ function readStory(id, fromFavs = false) {
 }
 
 function displayStory(story) {
-    storyTitle.textContent = story.title;
-    storyMeta.textContent  = `By ${story.author} | ${story.category || 'Story'}`;
-    storyBody.textContent  = story.content || 'No content available for this magical tale.';
+    const overlay = document.getElementById('storyOverlay');
+    const title = document.getElementById('storyTitle');
+    const meta = document.getElementById('storyMeta');
+    const body = document.getElementById('storyBody');
 
-    storyOverlay.classList.add('active');
+    if (!overlay || !title || !body) {
+        console.error('Story reader elements not found');
+        return;
+    }
+
+    title.textContent = story.title || 'Untitled Tale';
+    if (meta) meta.textContent = `By ${story.author || 'Unknown'} | ${story.category || 'Story'}`;
+    body.textContent = story.content || 'No content available for this magical tale.';
+
+    // Reset TTS button
+    const ttsBtn = document.getElementById('ttsBtn');
+    if (ttsBtn) {
+        const span = ttsBtn.querySelector('span');
+        const icon = ttsBtn.querySelector('i');
+        if (span) span.textContent = 'Read Aloud';
+        if (icon) icon.setAttribute('data-lucide', 'volume-2');
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
+let speechInstance = null;
+
+function toggleTTS() {
+    const ttsBtn = document.getElementById('ttsBtn');
+    const content = document.getElementById('storyBody').textContent;
+
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        ttsBtn.querySelector('span').textContent = 'Read Aloud';
+        ttsBtn.querySelector('i').setAttribute('data-lucide', 'volume-2');
+    } else {
+        speechInstance = new SpeechSynthesisUtterance(content);
+        speechInstance.rate = 0.9; // Slightly slower for kids
+        speechInstance.pitch = 1.1; // Slightly higher/friendly pitch
+        
+        speechInstance.onend = () => {
+            ttsBtn.querySelector('span').textContent = 'Read Aloud';
+            ttsBtn.querySelector('i').setAttribute('data-lucide', 'volume-2');
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        window.speechSynthesis.speak(speechInstance);
+        ttsBtn.querySelector('span').textContent = 'Stop Reading';
+        ttsBtn.querySelector('i').setAttribute('data-lucide', 'volume-x');
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+
 function closeStory() {
+    window.speechSynthesis.cancel(); // Stop any reading
     storyOverlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 }
@@ -355,12 +419,34 @@ registerForm.addEventListener('submit', async (e) => {
     const btn = e.target.querySelector('button');
     const inputs = e.target.querySelectorAll('input');
     
-    const userData = {
-        name: inputs[0].value,
-        email: inputs[1].value,
-        password: inputs[2].value,
-        childName: inputs[3].value
-    };
+    const name = inputs[0].value.trim();
+    const email = inputs[1].value.trim();
+    const password = inputs[2].value;
+    const childName = inputs[3].value.trim();
+
+    // Validations
+    if (!name || !email || !password || !childName) {
+        alert('All fields are required! ✨');
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address for your magical account! 📧');
+        return;
+    }
+
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters long to keep your tales safe! 🔐');
+        return;
+    }
+
+    if (name.length < 2) {
+        alert('Please enter a valid name.');
+        return;
+    }
+
+    const userData = { name, email, password, childName };
     
     const originalText = btn.textContent;
     btn.textContent = 'Creating Magic...';
@@ -376,7 +462,7 @@ registerForm.addEventListener('submit', async (e) => {
         const data = await response.json();
 
         if (response.ok) {
-            alert('Account created! Let the stories begin.');
+            alert('Account created! Let the stories begin. ✨');
             closeAuth();
             localStorage.setItem('user', JSON.stringify(data));
             updateAuthState(data);

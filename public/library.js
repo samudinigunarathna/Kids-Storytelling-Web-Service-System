@@ -161,18 +161,82 @@ const storyMeta    = document.getElementById('storyMeta');
 const storyBody    = document.getElementById('storyBody');
 
 function readStory(id) {
-    const story = allStories.find(s => s._id === id);
-    if (!story) return;
+    const story = allStories.find(s => s._id === id || s.id === id);
+    if (!story) {
+        console.warn('Story not found in local cache, fetching...');
+        fetch(`/api/story/getStoryById/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.title) {
+                    displayStory(data);
+                }
+            })
+            .catch(err => console.error('Fetch error:', err));
+        return;
+    }
 
-    storyTitle.textContent = story.title;
-    storyMeta.textContent  = `By ${story.author} | ${story.category || 'Story'}`;
-    storyBody.textContent  = story.content || 'No content available for this magical tale.';
+    displayStory(story);
+}
 
-    storyOverlay.classList.add('active');
+function displayStory(story) {
+    const overlay = document.getElementById('storyOverlay');
+    const title = document.getElementById('storyTitle');
+    const meta = document.getElementById('storyMeta');
+    const body = document.getElementById('storyBody');
+
+    if (!overlay || !title || !body) {
+        console.error('Story reader elements not found');
+        return;
+    }
+
+    title.textContent = story.title || 'Untitled Tale';
+    if (meta) meta.textContent = `By ${story.author || 'Unknown'} | ${story.category || 'Story'}`;
+    body.textContent = story.content || 'No content available for this magical tale.';
+
+    // Reset TTS button
+    const ttsBtn = document.getElementById('ttsBtn');
+    if (ttsBtn) {
+        const span = ttsBtn.querySelector('span');
+        const icon = ttsBtn.querySelector('i');
+        if (span) span.textContent = 'Read Aloud';
+        if (icon) icon.setAttribute('data-lucide', 'volume-2');
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    overlay.classList.add('active');
     document.body.style.overflow = 'hidden'; // Prevent scrolling background
 }
 
+let speechInstance = null;
+
+function toggleTTS() {
+    const ttsBtn = document.getElementById('ttsBtn');
+    const content = document.getElementById('storyBody').textContent;
+
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        ttsBtn.querySelector('span').textContent = 'Read Aloud';
+        ttsBtn.querySelector('i').setAttribute('data-lucide', 'volume-2');
+    } else {
+        speechInstance = new SpeechSynthesisUtterance(content);
+        speechInstance.rate = 0.9;
+        speechInstance.pitch = 1.1;
+        
+        speechInstance.onend = () => {
+            ttsBtn.querySelector('span').textContent = 'Read Aloud';
+            ttsBtn.querySelector('i').setAttribute('data-lucide', 'volume-2');
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        window.speechSynthesis.speak(speechInstance);
+        ttsBtn.querySelector('span').textContent = 'Stop Reading';
+        ttsBtn.querySelector('i').setAttribute('data-lucide', 'volume-x');
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+
 function closeStory() {
+    window.speechSynthesis.cancel();
     storyOverlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 }
