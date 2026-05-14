@@ -334,5 +334,39 @@ async function removeFavourite(storyId) {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', loadStories);
+document.addEventListener('DOMContentLoaded', () => {
+    loadStories();
+    
+    // Header Background Switcher (Swipe Right)
+    const header = document.getElementById('libraryHeader');
+    if (header) {
+        const slides = document.querySelectorAll('.header-slide');
+        let currentIndex = 0;
+        
+        setInterval(() => {
+            const nextIndex = (currentIndex + 1) % slides.length;
+            
+            // Prepare next slide (hidden on the left)
+            slides[nextIndex].style.transition = 'none';
+            slides[nextIndex].style.transform = 'translateX(-100%)';
+            slides[nextIndex].classList.remove('prev');
+            slides[nextIndex].classList.remove('active');
+            
+            // Trigger reflow
+            slides[nextIndex].offsetHeight;
+            
+            // Current slide moves to the right (out of view)
+            slides[currentIndex].style.transition = 'transform 1.2s cubic-bezier(0.65, 0, 0.35, 1)';
+            slides[currentIndex].style.transform = 'translateX(100%)';
+            slides[currentIndex].classList.remove('active');
+            
+            // Next slide moves to the center (from left to right)
+            slides[nextIndex].style.transition = 'transform 1.2s cubic-bezier(0.65, 0, 0.35, 1)';
+            slides[nextIndex].classList.add('active');
+            slides[nextIndex].style.transform = 'translateX(0)';
+            
+            currentIndex = nextIndex;
+        }, 30000); // 30 seconds
+    }
+});
 
