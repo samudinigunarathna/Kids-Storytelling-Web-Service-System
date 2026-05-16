@@ -371,6 +371,7 @@ function displayStory(story) {
     const title = document.getElementById('storyTitle');
     const meta = document.getElementById('storyMeta');
     const body = document.getElementById('storyBody');
+    const takeQuizBtn = document.getElementById('takeQuizBtn');
 
     if (!overlay || !title || !body) {
         console.error('Story reader elements not found');
@@ -380,6 +381,13 @@ function displayStory(story) {
     title.textContent = story.title || 'Untitled Tale';
     if (meta) meta.textContent = `By ${story.author || 'Unknown'} | ${story.category || 'Story'}`;
     body.textContent = story.content || 'No content available for this magical tale.';
+
+    // Reset view to story (in case coming from a previous quiz)
+    backToStory();
+
+    // Check if story has a quiz
+    currentStoryID = story._id || story.id;
+    checkIfQuizExists(currentStoryID);
 
     // Reset TTS button
     const ttsBtn = document.getElementById('ttsBtn');
@@ -427,6 +435,139 @@ function closeStory() {
     window.speechSynthesis.cancel(); // Stop any reading
     storyOverlay.classList.remove('active');
     document.body.style.overflow = 'auto';
+    backToStory(); // Reset view
+}
+
+// ── Quiz Logic ───────────────────────────────────────────────────────────────
+let currentStoryID = null;
+let currentQuiz = null;
+
+async function checkIfQuizExists(storyID) {
+    const takeQuizBtn = document.getElementById('takeQuizBtn');
+    try {
+        const response = await authFetch(`/api/quiz/getQuiz/${storyID}`);
+        if (response.ok) {
+            currentQuiz = await response.json();
+            takeQuizBtn.style.display = 'flex';
+            if (window.lucide) window.lucide.createIcons();
+        } else {
+            currentQuiz = null;
+            takeQuizBtn.style.display = 'none';
+        }
+    } catch (error) {
+        takeQuizBtn.style.display = 'none';
+    }
+}
+
+function startQuiz() {
+    if (!currentQuiz) return;
+    
+    document.getElementById('storyMainView').style.display = 'none';
+    document.getElementById('ttsBtn').style.display = 'none';
+    document.getElementById('takeQuizBtn').style.display = 'none';
+    document.getElementById('quizView').style.display = 'block';
+    document.getElementById('quizResults').style.display = 'none';
+    document.getElementById('quizContainer').style.display = 'block';
+    
+    renderQuiz();
+}
+
+function backToStory() {
+    document.getElementById('storyMainView').style.display = 'block';
+    document.getElementById('ttsBtn').style.display = 'flex';
+    if (currentQuiz) {
+        document.getElementById('takeQuizBtn').style.display = 'flex';
+    }
+    document.getElementById('quizView').style.display = 'none';
+    if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+}
+
+function renderQuiz() {
+    const container = document.getElementById('quizContainer');
+    container.innerHTML = currentQuiz.questions.map((q, qIndex) => `
+        <div class="quiz-question" style="margin-bottom: 2rem;">
+            <p style="font-weight: 600; margin-bottom: 1rem;">${qIndex + 1}. ${q.questionText}</p>
+            <div class="quiz-options" style="display: grid; gap: 0.5rem;">
+                ${q.options.map((opt, oIndex) => `
+                    <label class="quiz-option" style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem; background: var(--bg); border-radius: 50px; cursor: pointer; transition: var(--transition);">
+                        <input type="radio" name="question-${q._id}" value="${oIndex}" style="cursor: pointer;">
+                        <span>${opt}</span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    `).join('') + `
+        <button class="btn-primary" onclick="submitUserQuiz()" style="width: 100%; margin-top: 1rem;">Submit Answers</button>
+    `;
+
+    // Add click effect for labels
+    container.querySelectorAll('.quiz-option').forEach(label => {
+        label.addEventListener('click', function() {
+            const name = this.querySelector('input').name;
+            container.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+                input.parentElement.style.background = 'var(--bg)';
+                input.parentElement.style.borderColor = 'transparent';
+            });
+            this.style.background = 'var(--primary-light)';
+            this.style.color = 'white';
+        });
+    });
+}
+
+async function submitUserQuiz() {
+    const answers = [];
+    let allAnswered = true;
+
+    currentQuiz.questions.forEach(q => {
+        const selected = document.querySelector(`input[name="question-${q._id}"]:checked`);
+        if (selected) {
+            answers.push({
+                questionID: q._id,
+                selectedIndex: parseInt(selected.value)
+            });
+        } else {
+            allAnswered = false;
+        }
+    });
+
+    if (!allAnswered) {
+        alert('Please answer all questions before submitting! ✨');
+        return;
+    }
+
+    try {
+        const response = await authFetch('/api/quiz/submit', {
+            method: 'POST',
+            body: JSON.stringify({
+                quizID: currentQuiz._id,
+                answers: answers
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            showQuizResults(data);
+        } else {
+            alert('Error submitting quiz. Please try again.');
+        }
+    } catch (error) {
+        console.error('Quiz submit error:', error);
+    }
+}
+
+function showQuizResults(data) {
+    document.getElementById('quizContainer').style.display = 'none';
+    const results = document.getElementById('quizResults');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    
+    results.style.display = 'block';
+    scoreDisplay.textContent = `${data.score} / ${data.totalQuestions}`;
+    
+    if (data.percentage >= 70) {
+        scoreDisplay.innerHTML += '<div style="font-size: 1rem; font-weight: 500; margin-top: 0.5rem;">Amazing! You\'re a Story Expert! 🌟</div>';
+    } else {
+        scoreDisplay.innerHTML += '<div style="font-size: 1rem; font-weight: 500; margin-top: 0.5rem;">Good effort! Try reading the story again to get a perfect score! ✨</div>';
+    }
 }
 
 if (storyOverlay) {

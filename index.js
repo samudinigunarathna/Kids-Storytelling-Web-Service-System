@@ -7,7 +7,7 @@ import mongoose from "mongoose"; //Import mongoose for MongoDB interactions
 import userRoute from "./routes/userRoute.js";
 import storyRoute from "./routes/storyRoute.js";
 import favouriteRoute from "./routes/favouriteRoute.js";
-
+import quizRoute from "./routes/quizRoute.js";
 
 //Initialize express app
 const app = express();
@@ -63,3 +63,4 @@ mongoose
 app.use("/api/user", userRoute);
 app.use("/api/story", storyRoute);
 app.use("/api/favourite", favouriteRoute);
+app.use("/api/quiz", quizRoute);

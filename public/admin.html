@@ -222,6 +222,35 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Quiz Management Section -->
+                <div class="admin-card animate-up" style="animation-delay: 0.2s;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i data-lucide="brain" style="color: var(--accent);"></i>
+                            <h2 style="margin: 0; font-size: 1.5rem;">Quiz Management</h2>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table id="quizTable">
+                            <thead>
+                                <tr>
+                                    <th>Story Title</th>
+                                    <th>Quiz Status</th>
+                                    <th>Questions Count</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quizTableBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                        Loading quizzes...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -289,6 +318,51 @@
                     <button type="button" class="btn-login" style="background: var(--bg); color: var(--text-muted); flex: 1;" onclick="closeStoryModal()">Cancel</button>
                     <button type="submit" class="btn-login" style="flex: 2; background: var(--primary); box-shadow: 0 10px 20px rgba(255, 117, 160, 0.3);">
                         Submit ✨
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quiz Editor Modal -->
+    <div id="quizModal" class="auth-overlay">
+        <div class="auth-card" style="max-width: 800px; width: 95%; max-height: 90vh; overflow-y: auto; position: relative; padding: 3rem; background: var(--white); border-radius: 2rem;">
+            <button onclick="closeQuizModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; cursor: pointer; color: var(--text-muted); transition: var(--transition);">
+                <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+            </button>
+            
+            <div class="auth-header" style="text-align: left; margin-bottom: 2.5rem; display: flex; align-items: center; gap: 1.5rem;">
+                <div style="width: 60px; height: 60px; background: var(--bg); border-radius: 1.2rem; display: flex; align-items: center; justify-content: center; color: var(--accent);">
+                    <i data-lucide="brain" style="width: 32px; height: 32px;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <h2 id="quizModalTitle" style="font-size: 2rem; margin: 0; color: var(--text-main);">Manage Story Quiz</h2>
+                    <p id="quizStoryTitle" style="margin: 0.2rem 0 0; color: var(--text-muted); font-size: 1rem;"></p>
+                </div>
+                <button type="button" id="btnDeleteQuiz" class="btn-login" style="background: #fee2e2; color: #ef4444; border-color: transparent; display: none;" onclick="deleteAdminQuiz()">
+                    Delete Quiz
+                </button>
+            </div>
+
+            <form id="quizForm" class="story-form-grid">
+                <input type="hidden" id="quizId">
+                <input type="hidden" id="quizStoryId">
+                
+                <div id="questionsContainer" class="full-width" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <!-- Question fields will be injected here -->
+                </div>
+
+                <div class="full-width" style="margin-top: 1rem;">
+                    <button type="button" class="btn-login" style="width: 100%; border-style: dashed;" onclick="addQuestionField()">
+                        <i data-lucide="plus" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;"></i>
+                        Add Another Question
+                    </button>
+                </div>
+
+                <div class="full-width" style="display: flex; gap: 1.5rem; margin-top: 1rem;">
+                    <button type="button" class="btn-login" style="background: var(--bg); color: var(--text-muted); flex: 1;" onclick="closeQuizModal()">Cancel</button>
+                    <button type="submit" class="btn-login" style="flex: 2; background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 10px 20px rgba(100, 92, 187, 0.3);">
+                        Save Quiz ✨
                     </button>
                 </div>
             </form>

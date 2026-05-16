@@ -246,17 +246,34 @@
             <button class="close-btn" onclick="closeStory()">
                 <i data-lucide="x"></i>
             </button>
-            <div class="story-reader-content">
-                <div style="margin-bottom: 1.5rem; display: flex; justify-content: flex-end;">
+            <div class="story-reader-content" id="storyContentArea">
+                <div style="margin-bottom: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button class="btn-primary" id="takeQuizBtn" onclick="startQuiz()" style="display: none; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--accent);">
+                        <i data-lucide="brain"></i>
+                        <span>Take Quiz</span>
+                    </button>
                     <button class="btn-primary" id="ttsBtn" onclick="toggleTTS()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem;">
                         <i data-lucide="volume-2" style="width: 18px; height: 18px;"></i>
                         <span>Read Aloud</span>
                     </button>
                 </div>
-                <h2 id="storyTitle">Story Title</h2>
-                <p class="story-meta" id="storyMeta">By Author | Category</p>
-                <div class="story-body" id="storyBody">
-                    Story content goes here...
+                <div id="storyMainView">
+                    <h2 id="storyTitle">Story Title</h2>
+                    <p class="story-meta" id="storyMeta">By Author | Category</p>
+                    <div class="story-body" id="storyBody">
+                        Story content goes here...
+                    </div>
+                </div>
+                <div id="quizView" style="display: none;">
+                    <h2 id="quizTitle">Story Quiz</h2>
+                    <div id="quizContainer">
+                        <!-- Questions will be injected here -->
+                    </div>
+                    <div id="quizResults" style="display: none; text-align: center; margin-top: 2rem;">
+                        <h3>Quiz Complete!</h3>
+                        <p id="scoreDisplay" style="font-size: 2rem; color: var(--primary); font-weight: 800; margin: 1rem 0;"></p>
+                        <button class="btn-primary" onclick="backToStory()">Back to Story</button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -886,3 +886,39 @@ section {
     font-size: 1.2rem;
     color: var(--text-muted);
 }
+
+/* Quiz Styles */
+.quiz-option {
+    border: 2px solid transparent;
+    transition: var(--transition);
+}
+
+.quiz-option:hover {
+    border-color: var(--primary-light);
+    background: var(--white) !important;
+    transform: translateX(5px);
+}
+
+.quiz-question p {
+    font-size: 1.1rem;
+    color: var(--primary-dark);
+}
+
+#quizResults h3 {
+    color: var(--primary-dark);
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.story-modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.story-modal::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+
+.story-modal::-webkit-scrollbar-thumb {
+    background: var(--primary-light);
+    border-radius: 10px;
+}

@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // If admin, load data
     loadUsers();
     loadStories();
+    loadQuizzes();
 });
 
 // ── User Management ──────────────────────────────────────────────────────────
@@ -310,5 +311,227 @@ function logout() {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     window.location.href = 'index.html';
+}
+
+// ── Quiz Management ──────────────────────────────────────────────────────────
+async function loadQuizzes() {
+    const tableBody = document.getElementById('quizTableBody');
+    try {
+        const storiesRes = await fetch('/api/story/getAllStories');
+        const quizzesRes = await authFetch('/api/quiz/getAllQuizzes');
+        
+        if (storiesRes.ok && quizzesRes.ok) {
+            const stories = await storiesRes.json();
+            const quizzes = await quizzesRes.json();
+            
+            const storiesWithQuizzes = stories.map(story => {
+                const quiz = quizzes.find(q => q.storyID && q.storyID._id === story._id);
+                return {
+                    storyId: story._id,
+                    storyTitle: story.title,
+                    quizId: quiz ? quiz._id : null,
+                    questionsCount: quiz ? quiz.questions.length : 0,
+                    hasQuiz: !!quiz
+                };
+            });
+            renderQuizzes(storiesWithQuizzes);
+        } else {
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--primary);">Failed to load quizzes.</td></tr>';
+        }
+    } catch (error) {
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--primary);">Network error while loading quizzes.</td></tr>';
+    }
+}
+
+function renderQuizzes(quizData) {
+    const tableBody = document.getElementById('quizTableBody');
+    if (!tableBody) return;
+    
+    if (quizData.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No stories available to add quizzes to.</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = quizData.map(data => `
+        <tr>
+            <td style="font-weight: 600;">${data.storyTitle}</td>
+            <td>
+                <span class="role-badge" style="background: ${data.hasQuiz ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${data.hasQuiz ? '#16a34a' : '#dc2626'};">
+                    ${data.hasQuiz ? 'Exists' : 'Missing'}
+                </span>
+            </td>
+            <td>${data.questionsCount}</td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn-icon" onclick="openQuizModal('${data.storyId}', '${data.storyTitle.replace(/'/g, "\\'")}')" title="${data.hasQuiz ? 'Edit Quiz' : 'Add Quiz'}" style="color: var(--accent);">
+                        <i data-lucide="${data.hasQuiz ? 'edit' : 'plus-circle'}" style="width: 18px; height: 18px;"></i>
+                    </button>
+                    ${data.hasQuiz ? `
+                    <button class="btn-icon" onclick="deleteAdminQuiz('${data.quizId}')" title="Delete Quiz" style="color: #ef4444;">
+                        <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
+                    </button>` : ''}
+                </div>
+            </td>
+        </tr>
+    `).join('');
+
+    if (window.lucide) window.lucide.createIcons();
+}
+
+async function openQuizModal(storyId, storyTitle) {
+    const modal = document.getElementById('quizModal');
+    document.getElementById('quizStoryId').value = storyId;
+    document.getElementById('quizStoryTitle').textContent = `For: ${storyTitle}`;
+    const btnDelete = document.getElementById('btnDeleteQuiz');
+    const questionsContainer = document.getElementById('questionsContainer');
+    
+    questionsContainer.innerHTML = '';
+    
+    try {
+        const response = await authFetch(`/api/quiz/getQuiz/${storyId}`);
+        if (response.ok) {
+            const quizData = await response.json();
+            document.getElementById('quizId').value = quizData._id;
+            btnDelete.style.display = 'block';
+            
+            quizData.questions.forEach((q, index) => {
+                addQuestionField(q);
+            });
+        } else {
+            // No quiz exists yet
+            document.getElementById('quizId').value = '';
+            btnDelete.style.display = 'none';
+            addQuestionField(); // Add one empty question to start
+        }
+    } catch (error) {
+        console.error('Error fetching quiz:', error);
+        document.getElementById('quizId').value = '';
+        btnDelete.style.display = 'none';
+        addQuestionField();
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeQuizModal() {
+    const modal = document.getElementById('quizModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+let questionCounter = 0;
+function addQuestionField(questionData = null) {
+    const container = document.getElementById('questionsContainer');
+    const qId = questionCounter++;
+    
+    const questionText = questionData ? questionData.questionText : '';
+    const options = questionData ? questionData.options : ['', '', '', ''];
+    const correctIndex = questionData ? questionData.correctOptionIndex : 0;
+    
+    const questionHTML = `
+        <div class="quiz-question-block" style="background: var(--bg); padding: 1.5rem; border-radius: 1rem; position: relative;">
+            <button type="button" onclick="this.parentElement.remove()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #ef4444; cursor: pointer;">
+                <i data-lucide="trash" style="width: 18px; height: 18px;"></i>
+            </button>
+            <label class="form-label">Question</label>
+            <input type="text" class="premium-input question-text" style="padding-left: 1.2rem; margin-bottom: 1rem;" placeholder="Enter question..." value="${questionText}" required>
+            
+            <label class="form-label">Options (Select the correct one)</label>
+            <div style="display: grid; gap: 0.8rem;">
+                ${options.map((opt, i) => `
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="radio" name="correct-${qId}" value="${i}" ${i === correctIndex ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                        <input type="text" class="premium-input option-text" style="padding-left: 1.2rem; flex: 1;" placeholder="Option ${i + 1}" value="${opt}" required>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', questionHTML);
+    if (window.lucide) window.lucide.createIcons();
+}
+
+const quizFormElement = document.getElementById('quizForm');
+if (quizFormElement) {
+    quizFormElement.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const quizId = document.getElementById('quizId').value;
+        const storyId = document.getElementById('quizStoryId').value;
+        
+        const questionBlocks = document.querySelectorAll('.quiz-question-block');
+        if (questionBlocks.length === 0) {
+            alert('Please add at least one question.');
+            return;
+        }
+        
+        const questions = [];
+        let isValid = true;
+        
+        questionBlocks.forEach(block => {
+            const questionText = block.querySelector('.question-text').value.trim();
+            const optionInputs = block.querySelectorAll('.option-text');
+            const options = Array.from(optionInputs).map(opt => opt.value.trim());
+            const correctRadio = block.querySelector('input[type="radio"]:checked');
+            
+            if (!questionText || options.some(o => !o) || !correctRadio) {
+                isValid = false;
+            } else {
+                questions.push({
+                    questionText,
+                    options,
+                    correctOptionIndex: parseInt(correctRadio.value)
+                });
+            }
+        });
+        
+        if (!isValid) {
+            alert('Please fill out all fields and select a correct answer for each question.');
+            return;
+        }
+        
+        const url = quizId ? `/api/quiz/update/${quizId}` : '/api/quiz/create';
+        const method = quizId ? 'PUT' : 'POST';
+        
+        try {
+            const response = await authFetch(url, {
+                method: method,
+                body: JSON.stringify({ storyID: storyId, questions })
+            });
+            
+            if (response.ok) {
+                alert(quizId ? 'Quiz updated successfully! ✨' : 'Quiz created successfully! 🧠');
+                closeQuizModal();
+                loadQuizzes();
+            } else {
+                const data = await response.json();
+                alert(data.message || 'Error saving quiz.');
+            }
+        } catch (error) {
+            console.error('Save quiz error:', error);
+        }
+    });
+}
+
+async function deleteAdminQuiz(overrideId = null) {
+    const quizId = overrideId || document.getElementById('quizId').value;
+    if (!quizId) return;
+    
+    if (!confirm('Are you sure you want to delete this quiz?')) return;
+    
+    try {
+        const response = await authFetch(`/api/quiz/delete/${quizId}`, { method: 'DELETE' });
+        if (response.ok) {
+            alert('Quiz deleted successfully.');
+            closeQuizModal();
+            loadQuizzes();
+        } else {
+            alert('Failed to delete quiz.');
+        }
+    } catch (error) {
+        console.error('Delete quiz error:', error);
+    }
 }
 
