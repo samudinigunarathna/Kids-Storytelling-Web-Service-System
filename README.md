@@ -1,6 +1,6 @@
 # ✨ DreamTales | Kids Storytelling Platform
 
-DreamTales is a magical, full-stack web application designed to bring the joy of storytelling to children. Built with a modern Node.js backend and a vibrant, premium frontend, it allows kids and parents to discover, read, and save wonderful tales.
+DreamTales is a magical, full-stack web application designed to bring the joy of storytelling to children. Built with a modern Node.js backend and a vibrant, premium frontend, it allows kids and parents to discover, read, listen, and play quizzes on wonderful tales.
 
 ## 🌟 Key Features
 
@@ -8,7 +8,13 @@ DreamTales is a magical, full-stack web application designed to bring the joy of
 - **Standalone Library Page**: A dedicated space to browse our entire collection of stories.
 - **Smart Filtering**: Filter stories by category (e.g., Fairy Tales, Adventure, Educational) to find exactly what you're looking for.
 - **Live Search**: Quickly find stories by title or author name.
-- **Story Categories**: Each story is tagged with a colorful pill indicating its type.
+- **Story Images**: Supports local image covers as well as direct embedding from **Google Drive** links.
+
+### 🎭 Immersive Reading Experience
+- **Story Reader Modal**: Read stories in a beautiful, distraction-free popup window.
+- **Read Aloud (Text-to-Speech)**: Integrated TTS engine allows kids to listen to the stories with a click of a button.
+- **Interactive Story Quizzes**: Test reading comprehension with interactive multi-choice quizzes at the end of stories.
+- **Classic Storybook Layout**: Text elegantly wraps around story illustrations.
 
 ### 🏠 Personalized Dashboard
 - **Welcome Message**: Personalized greeting for every registered user.
@@ -16,12 +22,13 @@ DreamTales is a magical, full-stack web application designed to bring the joy of
 - **Favourites List**: A dedicated grid showing all your saved stories with one-click access to read them.
 - **Whimsical Animations**: Experience the magic with animated assets that glide across your dashboard.
 
-### 🎭 Immersive Reading Experience
-- **Story Reader Modal**: Read stories in a beautiful, distraction-free popup window.
-- **Preserved Formatting**: Stories maintain their natural flow and line breaks for the best reading experience.
+### 👑 Admin Management Dashboard
+- **User Directory**: View and manage all registered users and roles.
+- **Library Archives**: Easily draft, edit, and delete stories. Add custom images using filenames or Google Drive share links.
+- **Quiz Editor**: Create and modify interactive quizzes linked to specific stories.
 
 ### 🔐 Secure Access
-- **Auth Guards**: Restricted access to the library and favorites ensures a safe environment.
+- **Auth Guards**: Restricted access to the library, dashboard, and favorites ensures a safe environment.
 - **Smart Redirection**: The system remembers your intent. If you try to read a story while logged out, it will bring you back to exactly where you were after signing in.
 
 ## 🚀 Technologies Used
@@ -39,6 +46,7 @@ DreamTales is a magical, full-stack web application designed to bring the joy of
   ```env
   PORT=5000
   MONGO_URL=your_mongodb_connection_string
+  JWT_SECRET=your_super_secret_jwt_key
   ```
 
 ## 📦 Installation & Setup
@@ -72,19 +80,28 @@ DreamTales is a magical, full-stack web application designed to bring the joy of
 ### Story Routes (`/api/story`)
 - `POST /create`: Add a new tale to the library.
 - `GET /getAllStories`: Fetch all available stories.
+- `GET /getStoryById/:id`: Fetch a specific story.
 - `PUT /update/:id`: Update story details.
 - `DELETE /delete/:id`: Remove a story.
 
 ### Favourite Routes (`/api/favourite`)
 - `POST /create`: Save a story to your personal collection.
-- `GET /getFavourites/:userID`: Retrieve all favourites for a user (populated with story details).
-- `DELETE /delete/:id`: Remove a story from favourites.
+- `GET /getFavourites/:userID`: Retrieve all favourites for a user.
+- `DELETE /remove/:userId/:storyId`: Remove a story from favourites.
+
+### Quiz Routes (`/api/quiz`)
+- `POST /create`: Create a new quiz for a story.
+- `GET /getAllQuizzes`: Retrieve all quizzes for admin dashboard.
+- `GET /getQuiz/:storyId`: Retrieve a quiz linked to a specific story.
+- `PUT /update/:id`: Update an existing quiz.
+- `DELETE /delete/:id`: Delete a quiz.
+- `POST /submit`: Submit user's quiz answers for grading.
 
 ## 📁 Project Structure
 
 - `public/`: Premium frontend assets (HTML, CSS, JS, Images).
 - `controllers/`: Backend logic for handling API requests.
-- `models/`: Mongoose schemas for Users, Stories, and Favourites.
+- `models/`: Mongoose schemas for Users, Stories, Favourites, and Quizzes.
 - `routes/`: Express route definitions.
 - `index.js`: Main entry point and server configuration.
 
