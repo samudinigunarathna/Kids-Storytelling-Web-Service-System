@@ -218,6 +218,7 @@ function openStoryModal(story = null) {
     const titleInput = document.getElementById('title');
     const authorInput = document.getElementById('author');
     const categoryInput = document.getElementById('category');
+    const imageInput = document.getElementById('image');
     const contentInput = document.getElementById('content');
 
     if (story) {
@@ -226,6 +227,7 @@ function openStoryModal(story = null) {
         titleInput.value = story.title;
         authorInput.value = story.author;
         categoryInput.value = story.category;
+        imageInput.value = story.image || '';
         contentInput.value = story.content;
     } else {
         modalTitle.textContent = 'Draft a New Story';
@@ -281,6 +283,7 @@ if (storyFormElement) {
             title: document.getElementById('title').value,
             author: document.getElementById('author').value,
             category: document.getElementById('category').value,
+            image: document.getElementById('image').value,
             content: document.getElementById('content').value
         };
 

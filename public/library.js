@@ -249,7 +249,16 @@ function displayStory(story) {
     const storyImage = document.getElementById('storyImage');
     if (imageContainer && storyImage) {
         if (story.image) {
-            storyImage.src = `/assets/${story.image}`;
+            let imageSrc = story.image.trim();
+            if (imageSrc.includes('drive.google.com')) {
+                const match = imageSrc.match(/\/d\/([a-zA-Z0-9_-]+)/) || imageSrc.match(/id=([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    imageSrc = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+                }
+            } else if (!imageSrc.startsWith('http')) {
+                imageSrc = `/assets/${imageSrc}`;
+            }
+            storyImage.src = imageSrc;
             storyImage.alt = story.title;
             imageContainer.style.display = 'block';
         } else {
