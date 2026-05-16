@@ -21,6 +21,11 @@ const storySchema = new mongoose.Schema({
     content: {
         type: String,
     },
+
+    image: {
+        type: String,
+        default: "",
+    },
 });
 
 //Create and export the Mongoose model

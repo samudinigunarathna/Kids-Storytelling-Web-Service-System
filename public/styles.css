@@ -775,6 +775,15 @@ section {
     .story-reader-content h2 {
         font-size: 1.8rem;
     }
+    #storyImageContainer {
+        float: none !important;
+        margin: 0 0 1rem 0 !important;
+        max-width: 100% !important;
+        width: 100%;
+    }
+    #storyImage {
+        max-height: 250px !important;
+    }
 }
 
 /* Library Page Styles */

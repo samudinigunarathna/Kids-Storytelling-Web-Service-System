@@ -245,6 +245,18 @@ function displayStory(story) {
     if (meta) meta.textContent = `By ${story.author || 'Unknown'} | ${story.category || 'Story'}`;
     body.textContent = story.content || 'No content available for this magical tale.';
 
+    const imageContainer = document.getElementById('storyImageContainer');
+    const storyImage = document.getElementById('storyImage');
+    if (imageContainer && storyImage) {
+        if (story.image) {
+            storyImage.src = `/assets/${story.image}`;
+            storyImage.alt = story.title;
+            imageContainer.style.display = 'block';
+        } else {
+            imageContainer.style.display = 'none';
+        }
+    }
+
     // Reset view to story
     backToStory();
 
