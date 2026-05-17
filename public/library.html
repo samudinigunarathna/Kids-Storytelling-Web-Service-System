@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DreamTales | Magical Story Library</title>
-    <meta name="description" content="Browse our magical collection of hand-picked tales for your little ones.">
+    <meta name="description" content="Browse our magical collection of hand-picked tales for your little ones">
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -21,6 +22,7 @@
             position: relative;
             overflow: hidden;
         }
+
         .header-bg-container {
             position: absolute;
             top: 0;
@@ -29,6 +31,7 @@
             height: 100%;
             z-index: 1;
         }
+
         .header-slide {
             position: absolute;
             top: 0;
@@ -41,35 +44,42 @@
             transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
             transform: translateX(100%);
         }
+
         .header-slide.active {
             transform: translateX(0);
             z-index: 2;
         }
+
         .header-slide.prev {
             transform: translateX(-100%);
             z-index: 1;
         }
+
         .header-content {
             position: relative;
             z-index: 10;
         }
+
         .library-header h1 {
             font-size: 3.5rem;
             margin-bottom: 1rem;
             color: #ff75a0;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
+
         .library-header p {
             font-size: 1.2rem;
             color: #ff75a0;
             margin-bottom: 2.5rem;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
+
         .search-bar-wrapper {
             max-width: 550px;
             margin: 0 auto;
             position: relative;
         }
+
         .search-bar-wrapper i {
             position: absolute;
             left: 1.5rem;
@@ -79,6 +89,7 @@
             width: 20px;
             height: 20px;
         }
+
         #searchInput {
             width: 100%;
             padding: 1.1rem 1.5rem 1.1rem 3.5rem;
@@ -86,21 +97,24 @@
             border: none;
             font-family: inherit;
             font-size: 1rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
             outline: none;
             transition: var(--transition);
         }
+
         #searchInput:focus {
-            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
         }
+
         .library-controls {
             padding: 2.5rem 0 1rem;
             background: var(--white);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             position: sticky;
             top: 0;
             z-index: 100;
         }
+
         .category-filters {
             display: flex;
             gap: 0.8rem;
@@ -108,7 +122,11 @@
             padding-bottom: 0.5rem;
             scrollbar-width: none;
         }
-        .category-filters::-webkit-scrollbar { display: none; }
+
+        .category-filters::-webkit-scrollbar {
+            display: none;
+        }
+
         .category-btn {
             background: var(--bg);
             border: 2px solid transparent;
@@ -122,37 +140,51 @@
             white-space: nowrap;
             transition: var(--transition);
         }
-        .category-btn:hover { border-color: var(--primary-light); color: var(--primary); }
+
+        .category-btn:hover {
+            border-color: var(--primary-light);
+            color: var(--primary);
+        }
+
         .category-btn.active {
             background: var(--primary);
             color: white;
             border-color: var(--primary);
         }
+
         .library-body {
             padding: 4rem 0 6rem;
             min-height: 60vh;
         }
+
         .stories-count {
             color: var(--text-muted);
             font-size: 0.95rem;
             margin-bottom: 2rem;
             font-weight: 500;
         }
+
         .loading-state {
             text-align: center;
             padding: 4rem;
             color: var(--text-muted);
             grid-column: 1 / -1;
         }
-        .loading-state p { font-size: 1.1rem; }
+
+        .loading-state p {
+            font-size: 1.1rem;
+        }
+
         .nav-active {
             color: var(--primary) !important;
         }
+
         .nav-active::after {
             width: 100% !important;
         }
     </style>
 </head>
+
 <body>
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
@@ -192,7 +224,8 @@
 
     <!-- Category Filters & Search -->
     <div class="library-controls">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap;">
+        <div class="container"
+            style="display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap;">
             <div class="category-filters" id="categoryFilters">
                 <button class="category-btn active" onclick="filterByCategory('All')">All Stories</button>
             </div>
@@ -248,11 +281,13 @@
             </button>
             <div class="story-reader-content" id="storyContentArea">
                 <div style="margin-bottom: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button class="btn-primary" id="takeQuizBtn" onclick="startQuiz()" style="display: none; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--accent);">
+                    <button class="btn-primary" id="takeQuizBtn" onclick="startQuiz()"
+                        style="display: none; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--accent);">
                         <i data-lucide="brain"></i>
                         <span>Take Quiz</span>
                     </button>
-                    <button class="btn-primary" id="ttsBtn" onclick="toggleTTS()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    <button class="btn-primary" id="ttsBtn" onclick="toggleTTS()"
+                        style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem;">
                         <i data-lucide="volume-2" style="width: 18px; height: 18px;"></i>
                         <span>Read Aloud</span>
                     </button>
@@ -260,13 +295,48 @@
                 <div id="storyMainView">
                     <h2 id="storyTitle">Story Title</h2>
                     <p class="story-meta" id="storyMeta">By Author | Category</p>
-                    <div id="storyImageContainer" style="display: none; float: left; margin: 0 2rem 1rem 0; max-width: 40%; min-width: 200px;">
-                        <img id="storyImage" src="" alt="Story Image" referrerpolicy="no-referrer" style="width: 100%; border-radius: 1rem; box-shadow: var(--shadow); object-fit: cover;">
+                    <div id="storyImageContainer"
+                        style="display: none; float: left; margin: 0 2rem 1rem 0; max-width: 40%; min-width: 200px;">
+                        <img id="storyImage" src="" alt="Story Image" referrerpolicy="no-referrer"
+                            style="width: 100%; border-radius: 1rem; box-shadow: var(--shadow); object-fit: cover;">
                     </div>
                     <div class="story-body" id="storyBody">
                         Story content goes here...
                     </div>
                     <div style="clear: both;"></div>
+
+                    <!-- Reviews Section -->
+                    <div class="story-reviews" id="storyReviewsSection" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.1);">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="star" style="color: #fbbf24; fill: #fbbf24;"></i>
+                            Ratings & Reviews
+                        </h3>
+                        
+                        <div id="reviewsList" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Reviews will be injected here -->
+                        </div>
+
+                        <div class="review-form-container" style="background: var(--white); padding: 1.5rem; border-radius: 1rem; box-shadow: var(--shadow);">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-main);">Leave a Review</h4>
+                            <form id="reviewForm" onsubmit="submitReview(event)">
+                                <div style="margin-bottom: 1rem;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-muted);">Rating</label>
+                                    <div id="starRatingInput" style="display: flex; gap: 0.5rem; color: #d1d5db; cursor: pointer;">
+                                        <i data-lucide="star" data-rating="1" onclick="setRating(1)" style="transition: color 0.2s;"></i>
+                                        <i data-lucide="star" data-rating="2" onclick="setRating(2)" style="transition: color 0.2s;"></i>
+                                        <i data-lucide="star" data-rating="3" onclick="setRating(3)" style="transition: color 0.2s;"></i>
+                                        <i data-lucide="star" data-rating="4" onclick="setRating(4)" style="transition: color 0.2s;"></i>
+                                        <i data-lucide="star" data-rating="5" onclick="setRating(5)" style="transition: color 0.2s;"></i>
+                                    </div>
+                                    <input type="hidden" id="reviewRating" required>
+                                </div>
+                                <div style="margin-bottom: 1rem;">
+                                    <textarea id="reviewText" placeholder="What did you think of the story?" style="width: 100%; min-height: 100px; padding: 1rem; border-radius: 1rem; border: 2px solid var(--bg); background: var(--bg); outline: none; font-family: inherit; font-size: 1rem; resize: vertical;" required></textarea>
+                                </div>
+                                <button type="submit" class="btn-primary" id="submitReviewBtn">Submit Review</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
                 <div id="quizView" style="display: none;">
                     <h2 id="quizTitle">Story Quiz</h2>
@@ -275,7 +345,8 @@
                     </div>
                     <div id="quizResults" style="display: none; text-align: center; margin-top: 2rem;">
                         <h3>Quiz Complete!</h3>
-                        <p id="scoreDisplay" style="font-size: 2rem; color: var(--primary); font-weight: 800; margin: 1rem 0;"></p>
+                        <p id="scoreDisplay"
+                            style="font-size: 2rem; color: var(--primary); font-weight: 800; margin: 1rem 0;"></p>
                         <button class="btn-primary" onclick="backToStory()">Back to Story</button>
                     </div>
                 </div>
@@ -286,4 +357,5 @@
     <script src="library.js"></script>
     <script>lucide.createIcons();</script>
 </body>
+
 </html>

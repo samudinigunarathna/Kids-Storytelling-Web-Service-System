@@ -186,7 +186,10 @@ function renderStories(stories) {
                 <div class="story-content">
                     <h3>${story.title}</h3>
                     <p class="author">By ${story.author}</p>
-                    <p class="story-type"><i data-lucide="tag" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i>${story.category || 'General'}</p>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <p class="story-type" style="margin: 0;"><i data-lucide="tag" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i>${story.category || 'General'}</p>
+                        ${story.averageRating ? `<p style="margin: 0; color: #fbbf24; font-size: 0.9rem; font-weight: 600;"><i data-lucide="star" style="width:13px;height:13px;vertical-align:middle;margin-right:2px;fill:#fbbf24;"></i>${story.averageRating.toFixed(1)}</p>` : ''}
+                    </div>
                     <p class="excerpt">${story.content ? story.content.substring(0, 100) + '...' : 'Once upon a time...'}</p>
                     <div class="story-actions">
                         <button class="btn-read" onclick="readStory('${story._id}')">Read Now</button>
@@ -282,6 +285,13 @@ function displayStory(story) {
         if (icon) icon.setAttribute('data-lucide', 'volume-2');
         if (window.lucide) window.lucide.createIcons();
     }
+
+    // Render Reviews
+    renderReviews(story.reviews || []);
+
+    // Reset Review Form
+    document.getElementById('reviewForm').reset();
+    setRating(0);
 
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden'; // Prevent scrolling background
@@ -518,4 +528,104 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 30000); // 30 seconds
     }
 });
+// ── Reviews Logic ────────────────────────────────────────────────────────────
+function renderReviews(reviews) {
+    const list = document.getElementById('reviewsList');
+    if (!list) return;
 
+    if (!reviews || reviews.length === 0) {
+        list.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No reviews yet. Be the first to leave a little magic! ✨</p>';
+        return;
+    }
+
+    list.innerHTML = reviews.map(r => `
+        <div style="background: var(--bg); padding: 1.5rem; border-radius: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                <h5 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">${r.userName || 'Anonymous Explorer'}</h5>
+                <div style="color: #fbbf24; display: flex; gap: 0.2rem;">
+                    ${Array.from({ length: 5 }, (_, i) => `<i data-lucide="star" style="width: 14px; height: 14px; ${i < r.rating ? 'fill: #fbbf24;' : ''}"></i>`).join('')}
+                </div>
+            </div>
+            ${r.reviewText ? `<p style="margin: 0.5rem 0 0 0; color: var(--text-muted); line-height: 1.5;">${r.reviewText}</p>` : ''}
+        </div>
+    `).join('');
+
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function setRating(rating) {
+    const stars = document.querySelectorAll('#starRatingInput i');
+    const input = document.getElementById('reviewRating');
+    
+    if (input) input.value = rating;
+
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.style.color = '#fbbf24';
+            star.style.fill = '#fbbf24';
+        } else {
+            star.style.color = '#d1d5db';
+            star.style.fill = 'transparent';
+        }
+    });
+}
+
+async function submitReview(event) {
+    event.preventDefault();
+
+    const savedUser = localStorage.getItem('user');
+    if (!savedUser) {
+        alert('Please login to leave a magical review! ✨');
+        window.location.href = 'index.html?openAuth=login';
+        return;
+    }
+
+    const userObj = JSON.parse(savedUser);
+    const rating = document.getElementById('reviewRating').value;
+    const text = document.getElementById('reviewText').value;
+
+    if (!rating || rating === '0') {
+        alert('Please select a star rating! ⭐');
+        return;
+    }
+
+    const btn = document.getElementById('submitReviewBtn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Submitting...';
+    btn.disabled = true;
+
+    try {
+        const response = await authFetch(`/api/story/${currentStoryID}/review`, {
+            method: 'POST',
+            body: JSON.stringify({
+                userID: userObj._id || userObj.id,
+                userName: userObj.name,
+                rating: parseInt(rating),
+                reviewText: text
+            })
+        });
+
+        if (response.ok) {
+            alert('Thank you for sharing your thoughts! 🌟');
+            
+            // Re-fetch stories to update average rating and the specific story's reviews
+            await loadStories();
+            
+            // Update modal with new reviews
+            const updatedStory = allStories.find(s => (s._id || s.id) === currentStoryID);
+            if (updatedStory) {
+                renderReviews(updatedStory.reviews);
+                document.getElementById('reviewForm').reset();
+                setRating(0);
+            }
+        } else {
+            const data = await response.json();
+            alert('Oops: ' + (data.message || 'Could not submit review'));
+        }
+    } catch (err) {
+        alert(err.message || 'Network error. Please try again later.');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}

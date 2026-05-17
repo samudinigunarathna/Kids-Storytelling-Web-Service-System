@@ -26,6 +26,19 @@ const storySchema = new mongoose.Schema({
         type: String,
         default: "",
     },
+
+    reviews: [{
+        userID: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
+        userName: { type: String, required: true },
+        rating: { type: Number, required: true, min: 1, max: 5 },
+        reviewText: { type: String, required: false },
+        createdAt: { type: Date, default: Date.now }
+    }],
+
+    averageRating: {
+        type: Number,
+        default: 0
+    }
 });
 
 //Create and export the Mongoose model

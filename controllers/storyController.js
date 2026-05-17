@@ -104,3 +104,43 @@ export const deleteStory = async (req, res) => {
         res.status(500).json({ message: "Internal server error." })
     }
 }
+
+// Add a review to a story
+export const addReview = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { userID, userName, rating, reviewText } = req.body;
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ message: "Rating must be between 1 and 5." });
+        }
+
+        const storyData = await story.findById(id);
+        if (!storyData) {
+            return res.status(404).json({ message: "Story not found." });
+        }
+
+        // Check if user already reviewed
+        const existingReviewIndex = storyData.reviews.findIndex(r => r.userID.toString() === userID);
+        
+        if (existingReviewIndex !== -1) {
+            // Update existing review
+            storyData.reviews[existingReviewIndex].rating = rating;
+            storyData.reviews[existingReviewIndex].reviewText = reviewText;
+            storyData.reviews[existingReviewIndex].createdAt = Date.now();
+        } else {
+            // Add new review
+            storyData.reviews.push({ userID, userName, rating, reviewText });
+        }
+
+        // Calculate new average rating
+        const totalRating = storyData.reviews.reduce((sum, item) => sum + item.rating, 0);
+        storyData.averageRating = totalRating / storyData.reviews.length;
+
+        await storyData.save();
+
+        res.status(200).json({ message: "Review added successfully.", story: storyData });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error." });
+    }
+}
